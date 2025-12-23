@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberSleuth - Phishing Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='phishing.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="sidebar-title">CyberSleuth</h1>
+                <button id="toggleSidebar" class="toggle-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('network') }}" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                    <span>Network Analysis</span>
+                </a>
+                <a href="{{ url_for('phishing') }}" class="nav-item active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Phishing Detector</span>
+                </a>
+                <a href="{{ url_for('vulnerability') }}" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span>Vulnerability Scanner</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar">A</div>
+                    <div class="user-info">
+                        <div class="user-name">Admin</div>
+                        <div class="user-role">Security Analyst</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Phishing URL Detector</h1>
+                <p>Analyze URLs for potential phishing threats</p>
+            </div>
+
+            <div class="card scan-card">
+                <h2>Scan URL</h2>
+                <div class="scan-input-group">
+                    <input type="text" id="phishingUrlInput" placeholder="Enter URL to scan (e.g., https://example.com)" class="scan-input">
+                    <button id="phishingScanBtn" class="btn btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        Scan
+                    </button>
+                </div>
+            </div>
+
+            <div id="phishingResults" class="hidden">
+                <div class="phishing-grid">
+                    <div>
+                        <div class="card result-card">
+                            <div class="result-header">
+                                <h2>Scan Result</h2>
+                                <div class="status-badge" id="phishingStatus"></div>
+                            </div>
+                            <div class="scanned-url">
+                                <div class="label">Scanned URL</div>
+                                <div id="scannedUrl" class="url-text"></div>
+                            </div>
+                            <div class="risk-score-section">
+                                <div class="risk-score-header">
+                                    <span>Risk Score</span>
+                                    <span id="riskScoreValue" class="risk-value">0/100</span>
+                                </div>
+                                <div class="risk-bar">
+                                    <div id="riskBarFill" class="risk-bar-fill"></div>
+                                </div>
+                            </div>
+                            <div class="reasons-section">
+                                <div class="label">Analysis Reasons</div>
+                                <div id="reasonsList" class="reasons-list"></div>
+                            </div>
+                        </div>
+
+                        <div class="card features-card">
+                            <h2>Extracted URL Features</h2>
+                            <div id="featuresList" class="features-grid"></div>
+                        </div>
+                    </div>
+
+                    <div class="card history-card">
+                        <h2>Scan History</h2>
+                        <div id="phishingHistory" class="history-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="phishingEmptyState" class="card empty-state-card">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <h3>No scan results yet</h3>
+                <p>Enter a URL above to start scanning for phishing threats</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='common.js') }}"></script>
+    <script src="{{ url_for('static', filename='phishing.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+CyberSleuth* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #030712;
+    color: #f3f4f6;
+    overflow-y: hidden;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;  /* allows children to size correctly */
+    overflow-y: auto; /* fine — we control scroll inside children */
+}
+
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar Styles */
+
+.sidebar svg {
+    flex-shrink: 0;
+}
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar {
+    width: 16rem;
+    background-color: #111827;
+    border-right: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 64px;
+}
+
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .user-info {
+    display: none;
+}
+
+.sidebar.collapsed .user-profile {
+    justify-content: center;
+}
+
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-title {
+    font-size: 1.125rem;
+    color: #22d3ee;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    color: #f3f4f6;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s;
+    margin-left: auto;
+}
+
+.toggle-btn:hover {
+    background-color: #1f2937;
+}
+
+.sidebar.collapsed .toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 0.75rem;
+}
+
+.nav-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: none;
+    background: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    margin-bottom: 0.25rem;
+    font-size: 0.9375rem;
+    text-decoration: none;
+}
+
+.nav-item:hover {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+.nav-item.active {
+    background-color: #0891b2;
+    color: white;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid #1f2937;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #0891b2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+}
+
+.user-name {
+    font-size: 0.875rem;
+    color: #f3f4f6;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Main Content */
+.main-content {
+    padding: 0 0 0 0.25rem;
+    overflow-y: auto;
+    /* flex: 1;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+    */
+} 
+
+
+.page-header {
+    margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+    font-size: 1.875rem;
+    color: #22d3ee;
+    margin-bottom: 0.25rem;
+}
+
+.page-header p {
+    color: #9ca3af;
+    font-size: 0.9375rem;
+}
+
+/* Cards */
+.card {
+    background-color: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card h2 {
+    font-size: 1.125rem;
+    color: #22d3ee;
+    margin-bottom: 1rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background-color: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    color: #22d3ee;
+}
+
+.stat-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.stat-badge.live {
+    color: #10b981;
+}
+
+.stat-badge.alert {
+    color: #f97316;
+}
+
+.stat-badge.risk {
+    color: #ef4444;
+}
+
+.stat-badge.found {
+    color: #a855f7;
+}
+
+.stat-value {
+    font-size: 1.875rem;
+    margin-bottom: 0.25rem;
+    color: #f3f4f6;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background-color: #0891b2;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #0e7490;
+}
+
+.btn-primary:disabled {
+    background-color: #374151;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+/* Empty State */
+.empty-state-card {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-state-card svg {
+    color: #374151;
+    margin: 0 auto 1rem;
+}
+
+.empty-state-card h3 {
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-card p {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Legend */
+.legend {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.legend-label {
+    display: flex;
+    align-items: center;
+    color: #d1d5db;
+}
+
+.legend-value {
+    color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 64px;
+    }
+
+    .sidebar-title,
+    .nav-item span,
+    .user-info {
+        display: none;
+    }
+
+    .user-profile {
+        justify-content: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

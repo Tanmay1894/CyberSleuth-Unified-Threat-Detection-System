@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Packet Analysis </title>
+    <link rel="stylesheet" href="{{url_for('static',filename='network.css')}}">
+    <link rel="stylesheet" href="{{url_for('static',filename='common.css')}}">
+</head>
+<body>
+   <div class="app-container">
+
+        <aside id="sidebar" class="sidebar">
+
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">CyberSleuth</h1>
+            <button id="toggleSidebar" class="toggle-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" 
+                     stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('network') }}" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <span>Network Analysis</span>
+            </a>
+
+            <a href="{{ url_for('phishing') }}" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Phishing Detector</span>
+            </a>
+
+            <a href="{{ url_for('vulnerability') }}" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>Vulnerability Scanner</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Security Analyst</div>
+                </div>
+            </div>
+        </div>
+
+    </aside><!-- SIDEBAR GOES HERE -->
+
+    <div class="main network-page"> <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="app-title">
+                            Network Packet Analysis
+                        </h1>
+                        
+                    </div>
+                    
+                    <div class="header-controls">
+                        <!-- Session Controls -->
+                        <div class="session-controls">
+                            <div class="status-indicator" id="statusIndicator"></div>
+                            <span class="duration" id="sessionDuration">00:00:00</span>
+                            <button class="btn btn-danger" id="stopBtn" disabled>
+                                ⏹️ Stop
+                            </button>
+                            <button class="btn btn-primary" id="startBtn">
+                                ▶️ Start
+                            </button>
+                        </div>
+
+                        <!-- Export Controls -->
+                        <div class="export-controls">
+                            <button class="btn btn-secondary" id="exportBtn" disabled>
+                                📥 Export PCAP
+                            </button>
+                            <button class="btn btn-secondary" id="clearBtn">
+                                🗑️ Clear
+                            </button>
+                        </div>
+
+                        <!-- Settings -->
+                        <button class="btn btn-secondary" id="settingsBtn">
+                            ⚙️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div class="stats">
+                        <span>Packets: <span class="stat-value" id="totalPackets">0</span></span>
+                        <span>Rate: <span class="stat-value" id="packetsPerSecond">0.0</span> pkt/s</span>
+                        <span>Anomalies: <span class="stat-value anomalies" id="anomalies">0</span></span>
+                        <span>Interface: <span class="stat-value">eth0</span></span>
+                    </div>
+                    <div class="filters">
+                        <span>Filter:</span>
+                        <select id="protocolFilter" class="filter-select">
+                            <option value="all">All Protocols</option>
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="ICMP">ICMP</option>
+                            <option value="HTTP">HTTP</option>
+                            <option value="HTTPS">HTTPS</option>
+                            <option value="DNS">DNS</option>
+                        </select>
+                        <input type="text" id="ipFilter" placeholder="IP address..." class="filter-input">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Packet List -->
+                <div class="packet-list-container">
+                    <div class="packet-header">
+                        <div class="packet-col col-id">ID</div>
+                        <div class="packet-col col-timestamp">Timestamp</div>
+                        <div class="packet-col col-source">Source</div>
+                        <div class="packet-col col-destination">Destination</div>
+                        <div class="packet-col col-protocol">Protocol</div>
+                        <div class="packet-col col-size">Size</div>
+                        <div class="packet-col col-info">Info</div>
+                        <div class="packet-col col-score">Score</div>
+                    </div>
+                    <div class="packet-list" id="packetList">
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-icon">📡</div>
+                            <p>No packets to display</p>
+                            <p class="empty-subtitle">Start capturing to see network traffic</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Packet Details -->
+                <div class="packet-details" id="packetDetails">
+                    <div class="details-header">
+                        <h3>📋 Packet Details</h3>
+                    </div>
+                    <div class="details-content" id="detailsContent">
+                        <div class="no-selection">
+                            <div class="no-selection-icon">📋</div>
+                            <p>Select a packet to view details</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Statistics Dashboard -->
+            <div class="stats-dashboard">
+                <div class="dashboard-grid">
+                    <!-- Traffic Analysis -->
+                    <div class="dashboard-section">
+                        <h3>📊 Traffic Analysis</h3>
+                        <div class="charts-grid">
+                            <!-- Traffic Chart -->
+                            <div class="chart-card">
+                                <h4>Packets per Second</h4>
+                                <div class="traffic-chart" id="trafficChart"></div>
+                                <div class="chart-footer">Current: <span id="currentRate">0.0</span> pkt/s</div>
+                            </div>
+
+                            <!-- Protocol Distribution -->
+                            <div class="chart-card">
+                                <h4>Protocol Distribution</h4>
+                                <div class="protocol-chart" id="protocolChart">
+                                    <div class="no-data">No data available</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Panel -->
+                    <div class="dashboard-section">
+                        <h3>📈 Statistics</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="statTotalPackets">0</div>
+                                <div class="stat-label">Total Packets</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="statDataVolume">0 MB</div>
+                                <div class="stat-label">Data Transferred</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number anomalies" id="statAnomalies">0</div>
+                                <div class="stat-label">Anomalies Detected</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="statUniqueIPs">0</div>
+                                <div class="stat-label">Unique IP Addresses</div>
+                            </div>
+                        </div>
+
+                        <!-- Top Sources -->
+                        <div class="top-sources">
+                            <h4>Top Traffic Sources</h4>
+                            <div class="sources-list" id="topSources">
+                                <div class="no-data">No data available</div>
+                            </div>
+                        </div>
+
+                        <!-- ML Performance -->
+                        <div class="ml-performance">
+                            <h4>ML Performance</h4>
+                            <div class="ml-stats">
+                                <div class="ml-stat">
+                                    <span>Inference Time:</span>
+                                    <span>2.3ms</span>
+                                </div>
+                                <div class="ml-stat">
+                                    <span>Model Accuracy:</span>
+                                    <span>94.2%</span>
+                                </div>
+                                <div class="ml-stat">
+                                    <span>False Positives:</span>
+                                    <span>2.1%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="connection-status hidden" id="connectionStatus">
+                WebSocket disconnected
+            </div>
+        </div>
+    </div>
+
+        
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{{ url_for('static', filename='network.js') }}"></script>
+</body>
+</html>

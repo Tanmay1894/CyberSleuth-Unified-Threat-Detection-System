@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My project</title>
+  <style>
+    @import url(https://fonts.googleapis.com/css2?family=Lato&display=swap);
+    @import url(https://fonts.googleapis.com/css2?family=Open+Sans&display=swap);
+    @import url(https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined);
+    @import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css);
+
+    *,
+    :after,
+    :before {
+      --tw-border-spacing-x: 0;
+      --tw-border-spacing-y: 0;
+      --tw-translate-x: 0;
+      --tw-translate-y: 0;
+      --tw-rotate: 0;
+      --tw-skew-x: 0;
+      --tw-skew-y: 0;
+      --tw-scale-x: 1;
+      --tw-scale-y: 1;
+      --tw-pan-x: ;
+      --tw-pan-y: ;
+      --tw-pinch-zoom: ;
+      --tw-scroll-snap-strictness: proximity;
+      --tw-gradient-from-position: ;
+      --tw-gradient-via-position: ;
+      --tw-gradient-to-position: ;
+      --tw-ordinal: ;
+      --tw-slashed-zero: ;
+      --tw-numeric-figure: ;
+      --tw-numeric-spacing: ;
+      --tw-numeric-fraction: ;
+      --tw-ring-inset: ;
+      --tw-ring-offset-width: 0px;
+      --tw-ring-offset-color: #fff;
+      --tw-ring-color: rgba(59, 130, 246, 0.5);
+      --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-ring-shadow: 0 0 #0000;
+      --tw-shadow: 0 0 #0000;
+      --tw-shadow-colored: 0 0 #0000;
+      --tw-blur: ;
+      --tw-brightness: ;
+      --tw-contrast: ;
+      --tw-grayscale: ;
+      --tw-hue-rotate: ;
+      --tw-invert: ;
+      --tw-saturate: ;
+      --tw-sepia: ;
+      --tw-drop-shadow: ;
+      --tw-backdrop-blur: ;
+      --tw-backdrop-brightness: ;
+      --tw-backdrop-contrast: ;
+      --tw-backdrop-grayscale: ;
+      --tw-backdrop-hue-rotate: ;
+      --tw-backdrop-invert: ;
+      --tw-backdrop-opacity: ;
+      --tw-backdrop-saturate: ;
+      --tw-backdrop-sepia: ;
+      --tw-contain-size: ;
+      --tw-contain-layout: ;
+      --tw-contain-paint: ;
+      --tw-contain-style: ;
+    }
+
+    ::backdrop {
+      --tw-border-spacing-x: 0;
+      --tw-border-spacing-y: 0;
+      --tw-translate-x: 0;
+      --tw-translate-y: 0;
+      --tw-rotate: 0;
+      --tw-skew-x: 0;
+      --tw-skew-y: 0;
+      --tw-scale-x: 1;
+      --tw-scale-y: 1;
+      --tw-pan-x: ;
+      --tw-pan-y: ;
+      --tw-pinch-zoom: ;
+      --tw-scroll-snap-strictness: proximity;
+      --tw-gradient-from-position: ;
+      --tw-gradient-via-position: ;
+      --tw-gradient-to-position: ;
+      --tw-ordinal: ;
+      --tw-slashed-zero: ;
+      --tw-numeric-figure: ;
+      --tw-numeric-spacing: ;
+      --tw-numeric-fraction: ;
+      --tw-ring-inset: ;
+      --tw-ring-offset-width: 0px;
+      --tw-ring-offset-color: #fff;
+      --tw-ring-color: rgba(59, 130, 246, 0.5);
+      --tw-ring-offset-shadow: 0 0 #0000;
+      --tw-ring-shadow: 0 0 #0000;
+      --tw-shadow: 0 0 #0000;
+      --tw-shadow-colored: 0 0 #0000;
+      --tw-blur: ;
+      --tw-brightness: ;
+      --tw-contrast: ;
+      --tw-grayscale: ;
+      --tw-hue-rotate: ;
+      --tw-invert: ;
+      --tw-saturate: ;
+      --tw-sepia: ;
+      --tw-drop-shadow: ;
+      --tw-backdrop-blur: ;
+      --tw-backdrop-brightness: ;
+      --tw-backdrop-contrast: ;
+      --tw-backdrop-grayscale: ;
+      --tw-backdrop-hue-rotate: ;
+      --tw-backdrop-invert: ;
+      --tw-backdrop-opacity: ;
+      --tw-backdrop-saturate: ;
+      --tw-backdrop-sepia: ;
+      --tw-contain-size: ;
+      --tw-contain-layout: ;
+      --tw-contain-paint: ;
+      --tw-contain-style: ;
+    }
+
+    *,
+    :after,
+    :before {
+      border: 0 solid #e5e7eb;
+      box-sizing: border-box;
+    }
+
+    :after,
+    :before {
+      --tw-content: "";
+    }
+
+    :host,
+    html {
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+      font-family:
+        Open Sans,
+        ui-sans-serif,
+        system-ui,
+        sans-serif,
+        Apple Color Emoji,
+        Segoe UI Emoji,
+        Segoe UI Symbol,
+        Noto Color Emoji;
+      font-feature-settings: normal;
+      font-variation-settings: normal;
+      -moz-tab-size: 4;
+      tab-size: 4;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      line-height: inherit;
+      margin: 0;
+    }
+
+    hr {
+      border-top-width: 1px;
+      color: inherit;
+      height: 0;
+    }
+
+    abbr:where([title]) {
+      text-decoration: underline dotted;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-size: inherit;
+      font-weight: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: inherit;
+    }
+
+    b,
+    strong {
+      font-weight: bolder;
+    }
+
+    code,
+    kbd,
+    pre,
+    samp {
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        Liberation Mono,
+        Courier New,
+        monospace;
+      font-feature-settings: normal;
+      font-size: 1em;
+      font-variation-settings: normal;
+    }
+
+    small {
+      font-size: 80%;
+    }
+
+    sub,
+    sup {
+      font-size: 75%;
+      line-height: 0;
+      position: relative;
+      vertical-align: baseline;
+    }
+
+    sub {
+      bottom: -0.25em;
+    }
+
+    sup {
+      top: -0.5em;
+    }
+
+    table {
+      border-collapse: collapse;
+      border-color: inherit;
+      text-indent: 0;
+    }
+
+    button,
+    input,
+    optgroup,
+    select,
+    textarea {
+      color: inherit;
+      font-family: inherit;
+      font-feature-settings: inherit;
+      font-size: 100%;
+      font-variation-settings: inherit;
+      font-weight: inherit;
+      letter-spacing: inherit;
+      line-height: inherit;
+      margin: 0;
+      padding: 0;
+    }
+
+    button,
+    select {
+      text-transform: none;
+    }
+
+    button,
+    input:where([type="button"]),
+    input:where([type="reset"]),
+    input:where([type="submit"]) {
+      -webkit-appearance: button;
+      background-color: transparent;
+      background-image: none;
+    }
+
+    :-moz-focusring {
+      outline: auto;
+    }
+
+    :-moz-ui-invalid {
+      box-shadow: none;
+    }
+
+    progress {
+      vertical-align: baseline;
+    }
+
+    ::-webkit-inner-spin-button,
+    ::-webkit-outer-spin-button {
+      height: auto;
+    }
+
+    [type="search"] {
+      -webkit-appearance: textfield;
+      outline-offset: -2px;
+    }
+
+    ::-webkit-search-decoration {
+      -webkit-appearance: none;
+    }
+
+    ::-webkit-file-upload-button {
+      -webkit-appearance: button;
+      font: inherit;
+    }
+
+    summary {
+      display: list-item;
+    }
+
+    blockquote,
+    dd,
+    dl,
+    figure,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    hr,
+    p,
+    pre {
+      margin: 0;
+    }
+
+    fieldset {
+      margin: 0;
+    }
+
+    fieldset,
+    legend {
+      padding: 0;
+    }
+
+    menu,
+    ol,
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    dialog {
+      padding: 0;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #9ca3af;
+      opacity: 1;
+    }
+
+    [role="button"],
+    button {
+      cursor: pointer;
+    }
+
+    :disabled {
+      cursor: default;
+    }
+
+    audio,
+    canvas,
+    embed,
+    iframe,
+    img,
+    object,
+    svg,
+    video {
+      display: block;
+      vertical-align: middle;
+    }
+
+    img,
+    video {
+      height: auto;
+      max-width: 100%;
+    }
+
+    [hidden]:where(:not([hidden="until-found"])) {
+      display: none;
+    }
+
+    .container {
+      width: 100%;
+    }
+
+    @media (min-width: 640px) {
+      .container {
+        max-width: 640px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .container {
+        max-width: 768px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .container {
+        max-width: 1024px;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .container {
+        max-width: 1280px;
+      }
+    }
+
+    @media (min-width: 1536px) {
+      .container {
+        max-width: 1536px;
+      }
+    }
+
+    #cybersleuth .absolute {
+      position: absolute;
+    }
+
+    #cybersleuth .relative {
+      position: relative;
+    }
+
+    #cybersleuth .sticky {
+      position: sticky;
+    }
+
+    #cybersleuth .inset-0 {
+      inset: 0;
+    }
+
+    #cybersleuth .top-0 {
+      top: 0;
+    }
+
+    #cybersleuth .z-10 {
+      z-index: 10;
+    }
+
+    #cybersleuth .z-50 {
+      z-index: 50;
+    }
+
+    #cybersleuth .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #cybersleuth .mb-10 {
+      margin-bottom: 40px;
+    }
+
+    #cybersleuth .mb-12 {
+      margin-bottom: 48px;
+    }
+
+    #cybersleuth .mb-2 {
+      margin-bottom: 8px;
+    }
+
+    #cybersleuth .mb-3 {
+      margin-bottom: 12px;
+    }
+
+    #cybersleuth .mb-4 {
+      margin-bottom: 16px;
+    }
+
+    #cybersleuth .mb-6 {
+      margin-bottom: 24px;
+    }
+
+    #cybersleuth .mb-8 {
+      margin-bottom: 32px;
+    }
+
+    #cybersleuth .mr-2 {
+      margin-right: 8px;
+    }
+
+    #cybersleuth .mt-12 {
+      margin-top: 48px;
+    }
+
+    #cybersleuth .mt-2 {
+      margin-top: 8px;
+    }
+
+    #cybersleuth .flex {
+      display: flex;
+    }
+
+    #cybersleuth .grid {
+      display: grid;
+    }
+
+    #cybersleuth .hidden {
+      display: none;
+    }
+
+    #cybersleuth .h-48 {
+      height: 192px;
+    }
+
+    #cybersleuth .min-h-screen {
+      min-height: 100vh;
+    }
+
+    #cybersleuth .w-full {
+      width: 100%;
+    }
+
+    #cybersleuth .max-w-2xl {
+      max-width: 42rem;
+    }
+
+    #cybersleuth .max-w-3xl {
+      max-width: 48rem;
+    }
+
+    #cybersleuth .max-w-4xl {
+      max-width: 56rem;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    #cybersleuth .animate-pulse {
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    #cybersleuth .grid-cols-1 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    #cybersleuth .grid-cols-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #cybersleuth .flex-row {
+      flex-direction: row;
+    }
+
+    #cybersleuth .flex-col {
+      flex-direction: column;
+    }
+
+    #cybersleuth .items-center {
+      align-items: center;
+    }
+
+    #cybersleuth .justify-center {
+      justify-content: center;
+    }
+
+    #cybersleuth .justify-between {
+      justify-content: space-between;
+    }
+
+    #cybersleuth .gap-4 {
+      gap: 16px;
+    }
+
+    #cybersleuth .gap-6 {
+      gap: 24px;
+    }
+
+    #cybersleuth .gap-8 {
+      gap: 32px;
+    }
+
+    #cybersleuth :is(.space-x-2 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-x-reverse: 0;
+      margin-left: calc(8px * (1 - var(--tw-space-x-reverse)));
+      margin-right: calc(8px * var(--tw-space-x-reverse));
+    }
+
+    #cybersleuth :is(.space-x-3 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-x-reverse: 0;
+      margin-left: calc(12px * (1 - var(--tw-space-x-reverse)));
+      margin-right: calc(12px * var(--tw-space-x-reverse));
+    }
+
+    #cybersleuth :is(.space-x-4 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-x-reverse: 0;
+      margin-left: calc(16px * (1 - var(--tw-space-x-reverse)));
+      margin-right: calc(16px * var(--tw-space-x-reverse));
+    }
+
+    #cybersleuth :is(.space-x-6 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-x-reverse: 0;
+      margin-left: calc(24px * (1 - var(--tw-space-x-reverse)));
+      margin-right: calc(24px * var(--tw-space-x-reverse));
+    }
+
+    #cybersleuth :is(.space-y-2 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-y-reverse: 0;
+      margin-bottom: calc(8px * var(--tw-space-y-reverse));
+      margin-top: calc(8px * (1 - var(--tw-space-y-reverse)));
+    }
+
+    #cybersleuth :is(.space-y-3 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-y-reverse: 0;
+      margin-bottom: calc(12px * var(--tw-space-y-reverse));
+      margin-top: calc(12px * (1 - var(--tw-space-y-reverse)));
+    }
+
+    #cybersleuth :is(.space-y-4 > :not([hidden]) ~ :not([hidden])) {
+      --tw-space-y-reverse: 0;
+      margin-bottom: calc(16px * var(--tw-space-y-reverse));
+      margin-top: calc(16px * (1 - var(--tw-space-y-reverse)));
+    }
+
+    #cybersleuth .overflow-hidden {
+      overflow: hidden;
+    }
+
+    #cybersleuth .rounded-full {
+      border-radius: 9999px;
+    }
+
+    #cybersleuth .rounded-lg {
+      border-radius: 24px;
+    }
+
+    #cybersleuth .rounded-xl {
+      border-radius: 36px;
+    }
+
+    #cybersleuth .border {
+      border-width: 1px;
+    }
+
+    #cybersleuth .border-b {
+      border-bottom-width: 1px;
+    }
+
+    #cybersleuth .border-t {
+      border-top-width: 1px;
+    }
+
+    #cybersleuth .border-gray-600 {
+      --tw-border-opacity: 1;
+      border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
+    }
+
+    #cybersleuth .border-gray-700 {
+      --tw-border-opacity: 1;
+      border-color: rgb(55 65 81 / var(--tw-border-opacity, 1));
+    }
+
+    #cybersleuth .border-gray-700\/50 {
+      border-color: rgba(55, 65, 81, 0.5);
+    }
+
+    #cybersleuth .border-gray-800 {
+      --tw-border-opacity: 1;
+      border-color: rgb(31 41 55 / var(--tw-border-opacity, 1));
+    }
+
+    #cybersleuth .border-primary-600\/30 {
+      border-color: rgba(99, 27, 255, 0.3);
+    }
+
+    #cybersleuth .border-white\/30 {
+      border-color: hsla(0, 0%, 100%, 0.3);
+    }
+
+    #cybersleuth .bg-black\/30 {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    #cybersleuth .bg-blue-600\/70 {
+      background-color: rgba(37, 99, 235, 0.7);
+    }
+
+    #cybersleuth .bg-gray-700\/50 {
+      background-color: rgba(55, 65, 81, 0.5);
+    }
+
+    #cybersleuth .bg-gray-800\/30 {
+      background-color: rgba(31, 41, 55, 0.3);
+    }
+
+    #cybersleuth .bg-gray-800\/50 {
+      background-color: rgba(31, 41, 55, 0.5);
+    }
+
+    #cybersleuth .bg-gray-800\/70 {
+      background-color: rgba(31, 41, 55, 0.7);
+    }
+
+    #cybersleuth .bg-gray-900 {
+      --tw-bg-opacity: 1;
+      background-color: rgb(17 24 39 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .bg-orange-600\/70 {
+      background-color: rgba(234, 88, 12, 0.7);
+    }
+
+    #cybersleuth .bg-primary-600 {
+      --tw-bg-opacity: 1;
+      background-color: rgb(99 27 255 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .bg-primary-900\/20 {
+      background-color: rgba(60, 8, 170, 0.2);
+    }
+
+    #cybersleuth .bg-purple-600\/70 {
+      background-color: rgba(147, 51, 234, 0.7);
+    }
+
+    #cybersleuth .bg-transparent {
+      background-color: transparent;
+    }
+
+    #cybersleuth .bg-gradient-to-br {
+      background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+    }
+
+    #cybersleuth .bg-gradient-to-t {
+      background-image: linear-gradient(to top, var(--tw-gradient-stops));
+    }
+
+    #cybersleuth .from-blue-900\/50 {
+      --tw-gradient-from: rgba(30, 58, 138, 0.5) var(--tw-gradient-from-position);
+      --tw-gradient-to: rgba(30, 58, 138, 0) var(--tw-gradient-to-position);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+
+    #cybersleuth .from-gray-900 {
+      --tw-gradient-from: #111827 var(--tw-gradient-from-position);
+      --tw-gradient-to: rgba(17, 24, 39, 0) var(--tw-gradient-to-position);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+
+    #cybersleuth .from-purple-900\/50 {
+      --tw-gradient-from: rgba(88, 28, 135, 0.5) var(--tw-gradient-from-position);
+      --tw-gradient-to: rgba(88, 28, 135, 0) var(--tw-gradient-to-position);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+
+    #cybersleuth .from-red-900\/50 {
+      --tw-gradient-from: rgba(127, 29, 29, 0.5) var(--tw-gradient-from-position);
+      --tw-gradient-to: rgba(127, 29, 29, 0) var(--tw-gradient-to-position);
+      --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+    }
+
+    #cybersleuth .to-gray-800 {
+      --tw-gradient-to: #1f2937 var(--tw-gradient-to-position);
+    }
+
+    #cybersleuth .to-gray-800\/0 {
+      --tw-gradient-to: rgba(31, 41, 55, 0) var(--tw-gradient-to-position);
+    }
+
+    #cybersleuth .to-orange-900\/50 {
+      --tw-gradient-to: rgba(124, 45, 18, 0.5) var(--tw-gradient-to-position);
+    }
+
+    #cybersleuth .to-pink-900\/50 {
+      --tw-gradient-to: rgba(131, 24, 67, 0.5) var(--tw-gradient-to-position);
+    }
+
+    #cybersleuth .to-primary-900\/50 {
+      --tw-gradient-to: rgba(60, 8, 170, 0.5) var(--tw-gradient-to-position);
+    }
+
+    #cybersleuth .p-2 {
+      padding: 8px;
+    }
+
+    #cybersleuth .p-4 {
+      padding: 16px;
+    }
+
+    #cybersleuth .p-6 {
+      padding: 24px;
+    }
+
+    #cybersleuth .px-4 {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    #cybersleuth .px-6 {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    #cybersleuth .py-12 {
+      padding-bottom: 48px;
+      padding-top: 48px;
+    }
+
+    #cybersleuth .py-16 {
+      padding-bottom: 64px;
+      padding-top: 64px;
+    }
+
+    #cybersleuth .py-2 {
+      padding-bottom: 8px;
+      padding-top: 8px;
+    }
+
+    #cybersleuth .py-3 {
+      padding-bottom: 12px;
+      padding-top: 12px;
+    }
+
+    #cybersleuth .py-4 {
+      padding-bottom: 16px;
+      padding-top: 16px;
+    }
+
+    #cybersleuth .pt-6 {
+      padding-top: 24px;
+    }
+
+    #cybersleuth .text-center {
+      text-align: center;
+    }
+
+    #cybersleuth .text-2xl {
+      font-size: 24px;
+      line-height: 31.200000000000003px;
+    }
+
+    #cybersleuth .text-3xl {
+      font-size: 30px;
+      line-height: 36px;
+    }
+
+    #cybersleuth .text-4xl {
+      font-size: 36px;
+      line-height: 41.4px;
+    }
+
+    #cybersleuth .text-lg {
+      font-size: 18px;
+      line-height: 27px;
+    }
+
+    #cybersleuth .text-sm {
+      font-size: 14px;
+      line-height: 21px;
+    }
+
+    #cybersleuth .text-xl {
+      font-size: 20px;
+      line-height: 28px;
+    }
+
+    #cybersleuth .font-bold {
+      font-weight: 700;
+    }
+
+    #cybersleuth .font-medium {
+      font-weight: 500;
+    }
+
+    #cybersleuth .font-semibold {
+      font-weight: 600;
+    }
+
+    #cybersleuth .leading-tight {
+      line-height: 1.25;
+    }
+
+    #cybersleuth .tracking-tight {
+      letter-spacing: -0.025em;
+    }
+
+    #cybersleuth .text-blue-400 {
+      --tw-text-opacity: 1;
+      color: rgb(96 165 250 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-gray-300 {
+      --tw-text-opacity: 1;
+      color: rgb(209 213 219 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-gray-400 {
+      --tw-text-opacity: 1;
+      color: rgb(156 163 175 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-gray-500 {
+      --tw-text-opacity: 1;
+      color: rgb(107 114 128 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-green-500 {
+      --tw-text-opacity: 1;
+      color: rgb(34 197 94 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-orange-400 {
+      --tw-text-opacity: 1;
+      color: rgb(251 146 60 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-primary-400 {
+      --tw-text-opacity: 1;
+      color: rgb(148 120 255 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-primary-500 {
+      --tw-text-opacity: 1;
+      color: rgb(115 65 255 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-purple-400 {
+      --tw-text-opacity: 1;
+      color: rgb(192 132 252 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .text-white {
+      --tw-text-opacity: 1;
+      color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .backdrop-blur-sm {
+      --tw-backdrop-blur: blur(4px);
+      -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+      backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+    }
+
+    #cybersleuth .transition-all {
+      transition-duration: 0.15s;
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #cybersleuth .transition-colors {
+      transition-duration: 0.15s;
+      transition-property:
+        color, background-color, border-color, text-decoration-color, fill, stroke;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #cybersleuth .duration-300 {
+      transition-duration: 0.3s;
+    }
+
+    #cybersleuth {
+      font-family: Open Sans !important;
+      font-size: 16px !important;
+    }
+
+    #cybersleuth :is(.bg-primary-600) {
+      color: hsla(0, 0%, 100%, 0.9) !important;
+    }
+
+    #cybersleuth .hover\:translate-y-\[-2px\]:hover {
+      --tw-translate-y: -2px;
+    }
+
+    #cybersleuth .hover\:scale-105:hover,
+    #cybersleuth .hover\:translate-y-\[-2px\]:hover {
+      transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+    }
+
+    #cybersleuth .hover\:scale-105:hover {
+      --tw-scale-x: 1.05;
+      --tw-scale-y: 1.05;
+    }
+
+    #cybersleuth .hover\:transform:hover {
+      transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+    }
+
+    #cybersleuth .hover\:border-primary-500\/30:hover {
+      border-color: rgba(115, 65, 255, 0.3);
+    }
+
+    #cybersleuth .hover\:border-primary-500\/50:hover {
+      border-color: rgba(115, 65, 255, 0.5);
+    }
+
+    #cybersleuth .hover\:bg-blue-500:hover {
+      --tw-bg-opacity: 1;
+      background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .hover\:bg-gray-700:hover {
+      --tw-bg-opacity: 1;
+      background-color: rgb(55 65 81 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .hover\:bg-gray-800\/50:hover {
+      background-color: rgba(31, 41, 55, 0.5);
+    }
+
+    #cybersleuth .hover\:bg-orange-500:hover {
+      --tw-bg-opacity: 1;
+      background-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .hover\:bg-primary-500:hover {
+      --tw-bg-opacity: 1;
+      background-color: rgb(115 65 255 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .hover\:bg-primary-800\/50:hover {
+      background-color: rgba(70, 7, 208, 0.5);
+    }
+
+    #cybersleuth .hover\:bg-purple-500:hover {
+      --tw-bg-opacity: 1;
+      background-color: rgb(168 85 247 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth .hover\:bg-white\/10:hover {
+      background-color: hsla(0, 0%, 100%, 0.1);
+    }
+
+    #cybersleuth .hover\:text-primary-400:hover {
+      --tw-text-opacity: 1;
+      color: rgb(148 120 255 / var(--tw-text-opacity, 1));
+    }
+
+    #cybersleuth .hover\:shadow-lg:hover {
+      --tw-shadow:
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --tw-shadow-colored:
+        0 10px 15px -3px var(--tw-shadow-color),
+        0 4px 6px -4px var(--tw-shadow-color);
+    }
+
+    #cybersleuth .hover\:shadow-lg:hover,
+    #cybersleuth .hover\:shadow-xl:hover {
+      box-shadow:
+        var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+        var(--tw-shadow);
+    }
+
+    #cybersleuth .hover\:shadow-xl:hover {
+      --tw-shadow:
+        0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      --tw-shadow-colored:
+        0 20px 25px -5px var(--tw-shadow-color),
+        0 8px 10px -6px var(--tw-shadow-color);
+    }
+
+    #cybersleuth .hover\:shadow-primary-600\/20:hover {
+      --tw-shadow-color: rgba(99, 27, 255, 0.2);
+      --tw-shadow: var(--tw-shadow-colored);
+    }
+
+    #cybersleuth .hover\:shadow-primary-900\/20:hover {
+      --tw-shadow-color: rgba(60, 8, 170, 0.2);
+      --tw-shadow: var(--tw-shadow-colored);
+    }
+
+    #cybersleuth :is(.group:hover .group-hover\:bg-blue-500) {
+      --tw-bg-opacity: 1;
+      background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth :is(.group:hover .group-hover\:bg-orange-500) {
+      --tw-bg-opacity: 1;
+      background-color: rgb(249 115 22 / var(--tw-bg-opacity, 1));
+    }
+
+    #cybersleuth :is(.group:hover .group-hover\:bg-purple-500) {
+      --tw-bg-opacity: 1;
+      background-color: rgb(168 85 247 / var(--tw-bg-opacity, 1));
+    }
+
+    @media (min-width: 640px) {
+      #cybersleuth .sm\:flex-row {
+        flex-direction: row;
+      }
+
+      #cybersleuth :is(.sm\:space-x-4 > :not([hidden]) ~ :not([hidden])) {
+        --tw-space-x-reverse: 0;
+        margin-left: calc(16px * (1 - var(--tw-space-x-reverse)));
+        margin-right: calc(16px * var(--tw-space-x-reverse));
+      }
+
+      #cybersleuth :is(.sm\:space-y-0 > :not([hidden]) ~ :not([hidden])) {
+        --tw-space-y-reverse: 0;
+        margin-bottom: calc(0px * var(--tw-space-y-reverse));
+        margin-top: calc(0px * (1 - var(--tw-space-y-reverse)));
+      }
+    }
+
+    @media (min-width: 768px) {
+      #cybersleuth .md\:flex {
+        display: flex;
+      }
+
+      #cybersleuth .md\:hidden {
+        display: none;
+      }
+
+      #cybersleuth .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #cybersleuth .md\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      #cybersleuth .md\:py-20 {
+        padding-bottom: 80px;
+        padding-top: 80px;
+      }
+
+      #cybersleuth .md\:text-2xl {
+        font-size: 24px;
+        line-height: 31.200000000000003px;
+      }
+
+      #cybersleuth .md\:text-3xl {
+        font-size: 30px;
+        line-height: 36px;
+      }
+
+      #cybersleuth .md\:text-5xl {
+        font-size: 48px;
+        line-height: 52.800000000000004px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #cybersleuth .lg\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      #cybersleuth .lg\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+  </style>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="https://cdn.cybersleuth.org/assets/images/landing/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="192x192" href="https://cdn.cybersleuth.org/assets/images/landing/logo192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="https://cdn.cybersleuth.org/assets/images/landing/logo512.png" />
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CyberSleuth">
+</head>
+
+<body>
+  <div id="cybersleuth">
+    <div class="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+      <header class="py-4 px-6 bg-black/30 backdrop-blur-sm border-b border-primary-600/30 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+          <div class="flex items-center space-x-2"> <span
+              class="material-symbols-outlined text-primary-500 text-3xl animate-pulse">security</span>
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight"> <span class="text-primary-400">Cyber</span>Sleuth
+            </h1>
+          </div>
+          <nav class="hidden md:flex space-x-6"> <a href="#"
+              class="hover:text-primary-400 transition-all duration-300 hover:translate-y-[-2px]">Home</a> <a href="#"
+              class="hover:text-primary-400 transition-all duration-300 hover:translate-y-[-2px]">Features</a> <a
+              href="#"
+              class="hover:text-primary-400 transition-all duration-300 hover:translate-y-[-2px]">Documentation</a> <a
+              href="#" class="hover:text-primary-400 transition-all duration-300 hover:translate-y-[-2px]">About</a>
+          </nav>
+          <div class="flex items-center space-x-3"> <button
+              class="p-2 rounded-full hover:bg-primary-800/50 transition-all duration-300"> <span
+                class="material-symbols-outlined">notifications</span> </button> <button
+              class="p-2 rounded-full hover:bg-primary-800/50 transition-all duration-300 md:hidden"> <span
+                class="material-symbols-outlined">menu</span> </button> <button
+              class="hidden md:flex items-center bg-primary-600 hover:bg-primary-500 transition-all duration-300 px-4 py-2 rounded-lg">
+              <span class="material-symbols-outlined mr-2">lock</span> Login </button> </div>
+        </div>
+      </header>
+      <section class="py-12 md:py-20 px-6">
+        <div class="container mx-auto text-center">
+          <h2 class="text-3xl md:text-5xl font-bold mb-6 leading-tight"> Unified Threat Intelligence &amp;<br />Web
+            Security Analyzer </h2>
+          <p class="text-gray-300 max-w-2xl mx-auto mb-8 text-lg"> Advanced cybersecurity platform with real-time
+            monitoring, vulnerability detection, and threat intelligence capabilities. </p>
+          <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-12"> <button
+              class="bg-primary-600 hover:bg-primary-500 px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary-600/20"
+              onclick="location.href='#security-dashboard'">
+              Get Started </button> <button
+              class="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-lg">
+              Watch Demo </button> </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div
+              class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:transform hover:scale-105">
+              <div class="text-3xl font-bold text-primary-400 mb-2">99.9%</div>
+              <div class="text-gray-400">Uptime</div>
+            </div>
+            <div
+              class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:transform hover:scale-105">
+              <div class="text-3xl font-bold text-primary-400 mb-2">10k+</div>
+              <div class="text-gray-400">Threats Detected</div>
+            </div>
+            <div
+              class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:transform hover:scale-105">
+              <div class="text-3xl font-bold text-primary-400 mb-2">24/7</div>
+              <div class="text-gray-400">Monitoring</div>
+            </div>
+            <div
+              class="bg-gray-800/50 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:transform hover:scale-105">
+              <div class="text-3xl font-bold text-primary-400 mb-2">5000+</div>
+              <div class="text-gray-400">Active Users</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-16 px-6 bg-gradient-to-t from-gray-900 to-gray-800/0" id="security-dashboard">
+        <div class="container mx-auto">
+          <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center"> <span class="text-primary-400">Unified</span>
+            Security Dashboards </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div
+              class="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700 hover:border-primary-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary-900/20 group">
+              <div class="h-48 bg-gradient-to-br from-blue-900/50 to-primary-900/50 p-6 relative overflow-hidden">
+                <div
+                  class="absolute inset-0 bg-[url(&#x27;https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&amp;w=2034&#x27;)] bg-cover opacity-20 mix-blend-overlay">
+                </div> <span class="material-symbols-outlined text-4xl text-blue-400 mb-3">router</span>
+                <h3 class="text-xl font-bold mb-2">Network Packet Analyzer</h3>
+                <p class="text-gray-300 text-sm">Real-time traffic monitoring and packet analysis for network security
+                </p>
+              </div>
+              <div class="p-6 border-t border-gray-700">
+                <ul class="space-y-3 mb-4">
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> Traffic anomaly
+                    detection </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> Protocol
+                    analysis </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> DDoS attack
+                    prevention </li>
+                </ul> <button
+                  class="w-full py-2 bg-blue-600/70 hover:bg-blue-500 transition-all duration-300 rounded-lg mt-2 group-hover:bg-blue-500"
+                  onclick="location.href='network'">
+                  Access Dashboard </button>
+              </div>
+            </div>
+            <div
+              class="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700 hover:border-primary-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary-900/20 group">
+              <div class="h-48 bg-gradient-to-br from-red-900/50 to-orange-900/50 p-6 relative overflow-hidden">
+                <div
+                  class="absolute inset-0 bg-[url(&#x27;https://images.unsplash.com/photo-1607799279861-4dd421887fb3?q=80&amp;w=2070&#x27;)] bg-cover opacity-20 mix-blend-overlay">
+                </div> <span class="material-symbols-outlined text-4xl text-orange-400 mb-3">bug_report</span>
+                <h3 class="text-xl font-bold mb-2">Web Vulnerability Scanner</h3>
+                <p class="text-gray-300 text-sm">Comprehensive web application security testing and vulnerability
+                  detection</p>
+              </div>
+              <div class="p-6 border-t border-gray-700">
+                <ul class="space-y-3 mb-4">
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> SQL injection
+                    testing </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> XSS
+                    vulnerability scan </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> CSRF protection
+                    analysis </li>
+                </ul> <button
+                  class="w-full py-2 bg-orange-600/70 hover:bg-orange-500 transition-all duration-300 rounded-lg mt-2 group-hover:bg-orange-500">
+                  Access Dashboard </button>
+              </div>
+            </div>
+            <div
+              class="bg-gray-800/70 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-700 hover:border-primary-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-primary-900/20 group">
+              <div class="h-48 bg-gradient-to-br from-purple-900/50 to-pink-900/50 p-6 relative overflow-hidden">
+                <div
+                  class="absolute inset-0 bg-[url(&#x27;https://images.unsplash.com/photo-1614064641938-3bbee52942c7?q=80&amp;w=2070&#x27;)] bg-cover opacity-20 mix-blend-overlay">
+                </div> <span class="material-symbols-outlined text-4xl text-purple-400 mb-3">phishing</span>
+                <h3 class="text-xl font-bold mb-2">Phishing Link Detector</h3>
+                <p class="text-gray-300 text-sm">Advanced AI-powered phishing URL detection and prevention</p>
+              </div>
+              <div class="p-6 border-t border-gray-700">
+                <ul class="space-y-3 mb-4">
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> ML-based link
+                    analysis </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> Domain
+                    reputation check </li>
+                  <li class="flex items-center text-sm"> <span
+                      class="material-symbols-outlined text-green-500 mr-2 text-sm">check_circle</span> Visual
+                    similarity detection </li>
+                </ul> <button
+                  class="w-full py-2 bg-purple-600/70 hover:bg-purple-500 transition-all duration-300 rounded-lg mt-2 group-hover:bg-purple-500">
+                  Access Dashboard </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-16 px-6">
+        <div class="container mx-auto">
+          <h2 class="text-2xl md:text-3xl font-bold mb-10 text-center"> Key <span
+              class="text-primary-400">Features</span> </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div
+              class="bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:bg-gray-800/50">
+              <span class="material-symbols-outlined text-3xl text-primary-500 mb-4">speed</span>
+              <h3 class="text-lg font-semibold mb-2">Real-time Monitoring</h3>
+              <p class="text-gray-400 text-sm">Continuous monitoring of network traffic and security events with instant
+                alerts.</p>
+            </div>
+            <div
+              class="bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:bg-gray-800/50">
+              <span class="material-symbols-outlined text-3xl text-primary-500 mb-4">insights</span>
+              <h3 class="text-lg font-semibold mb-2">Threat Intelligence</h3>
+              <p class="text-gray-400 text-sm">Stay ahead of emerging threats with global threat intelligence
+                integration and analysis.</p>
+            </div>
+            <div
+              class="bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:bg-gray-800/50">
+              <span class="material-symbols-outlined text-3xl text-primary-500 mb-4">api</span>
+              <h3 class="text-lg font-semibold mb-2">API Integration</h3>
+              <p class="text-gray-400 text-sm">Seamlessly integrate with existing security infrastructure through our
+                robust API.</p>
+            </div>
+            <div
+              class="bg-gray-800/30 p-6 rounded-lg border border-gray-700/50 hover:border-primary-500/30 transition-all duration-300 hover:bg-gray-800/50">
+              <span class="material-symbols-outlined text-3xl text-primary-500 mb-4">psychology_alt</span>
+              <h3 class="text-lg font-semibold mb-2">AI-Powered Analysis</h3>
+              <p class="text-gray-400 text-sm">Advanced machine learning algorithms for predictive threat detection and
+                analysis.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-16 px-6 relative">
+        <div class="absolute inset-0 bg-primary-900/20 backdrop-blur-sm"></div>
+        <div class="container mx-auto relative z-10">
+          <div class="max-w-3xl mx-auto text-center">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6">Ready to Secure Your Digital Infrastructure?</h2>
+            <p class="text-gray-300 mb-8">Start protecting your systems and data with our comprehensive security
+              solution. Try it free for 14 days.</p>
+            <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4"> <button
+                class="bg-primary-600 hover:bg-primary-500 px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary-600/20">
+                Start Free Trial </button> <button
+                class="bg-transparent hover:bg-white/10 border border-white/30 px-6 py-3 rounded-lg font-medium transition-all duration-300">
+                Schedule Demo </button> </div>
+          </div>
+        </div>
+      </section>
+      <footer class="bg-gray-900 py-12 px-6 border-t border-gray-800">
+        <div class="container mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div class="flex items-center space-x-2 mb-4"> <span
+                  class="material-symbols-outlined text-primary-500 text-2xl">security</span>
+                <h3 class="text-xl font-bold"> <span class="text-primary-400">Cyber</span>Sleuth </h3>
+              </div>
+              <p class="text-gray-400 text-sm mb-4">Unified threat intelligence and web security analyzer for
+                comprehensive cybersecurity protection.</p>
+              <div class="flex space-x-4"> <a href="#"
+                  class="text-gray-400 hover:text-primary-400 transition-colors duration-300"> <i
+                    class="fa-brands fa-twitter text-lg"></i> </a> <a href="#"
+                  class="text-gray-400 hover:text-primary-400 transition-colors duration-300"> <i
+                    class="fa-brands fa-github text-lg"></i> </a> <a href="#"
+                  class="text-gray-400 hover:text-primary-400 transition-colors duration-300"> <i
+                    class="fa-brands fa-linkedin text-lg"></i> </a> </div>
+            </div>
+            <div>
+              <h4 class="text-lg font-medium mb-4">Product</h4>
+              <ul class="space-y-2 text-gray-400">
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Features</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Pricing</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">API</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Documentation</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-lg font-medium mb-4">Company</h4>
+              <ul class="space-y-2 text-gray-400">
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">About Us</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Careers</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Blog</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-lg font-medium mb-4">Legal</h4>
+              <ul class="space-y-2 text-gray-400">
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Privacy Policy</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Terms of Service</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">Cookie Policy</a></li>
+                <li><a href="#" class="hover:text-primary-400 transition-colors duration-300">GDPR Compliance</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="mt-12 pt-6 border-t border-gray-800 text-center text-gray-500 text-sm">
+            <p>© 2023 CyberSleuth Security. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+</body>
+
+</html>
