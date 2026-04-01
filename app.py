@@ -17,6 +17,7 @@ except Exception:
 # Import the core logic functions and globals
 from core.api_routes import register_api_endpoints
 from core import notifications
+from core.network_analysis import get_websocket_data
 
 
 # Initialize Flask and configure paths
@@ -109,99 +110,60 @@ def vulnerability():
     return render_template("vulnerability.html")
 
 
-# --- 2. ROUTING FOR NETWORK ANALYSIS API ---
+# --- 2. ROUTING FOR SECURITY MODULES ---
 
-@app.route("/api/sessions", methods=["POST"])
-def route_create_session():
-    # Lazy import to avoid heavy startup imports
-    from core.network_analysis import create_session_api
-    return create_session_api()
-
-@app.route("/api/sessions/<int:sid>/start", methods=["POST"])
-def route_start_capture(sid):
-    # Ensure ML model is loaded before starting capture
-    from core.network_analysis import load_ml_model, start_capture_api
-    try:
-        load_ml_model()
-    except Exception:
-        pass
-    return start_capture_api(sid)
-
-@app.route("/api/sessions/<int:sid>/stop", methods=["POST"])
-def route_stop_capture(sid):
-    from core.network_analysis import stop_capture_api
-    return stop_capture_api(sid)
-
-@app.route("/api/sessions/<int:sid>/export.pcap", methods=["GET"])
-def route_export_pcap(sid):
-    from core.network_analysis import export_pcap_api
-    return export_pcap_api(sid)
-
-
-# --- 3. ROUTING FOR SECURITY MODULES ---
-
-@app.route("/api/analyze/phishing", methods=["POST"])
-def api_phishing_detector():
-    """Endpoint to check a single URL for phishing manually."""
-    url = request.json.get('url')
-    session_id = request.json.get('session_id')
-    if not url:
-        return jsonify({"error": "URL parameter missing"}), 400
-
-    from core.phishing_detector import analyze_url
-    result = analyze_url(url, source="Manual", session_id=session_id)
-    return jsonify(result)
-
-@app.route("/api/scan/web", methods=["POST"])
-def api_web_scanner():
-    """Endpoint to run a web vulnerability scan."""
-    url = request.json.get('url')
-    session_id = request.json.get('session_id')
-    if not url:
-        return jsonify({"error": "URL parameter missing"}), 400
-    # Start an async scan and return pending status
-    from core.web_scanner import start_vulnerability_scan
-    result = start_vulnerability_scan(session_id, url)
-    if isinstance(result, dict) and result.get('error'):
-        return jsonify(result), 500
-    return jsonify(result)
+# Routes moved to Blueprint in core/api_routes.py
 
 
 # --- 4. WEBSOCKET ROUTE ---
 
 @sock.route("/ws")
-def ws(ws):
+def ws(sock):
+    backoff = 0.2
+
     while True:
         try:
-            # Lazy import websocket data helper
-            from core.network_analysis import get_websocket_data
             new_flows, stats_data = get_websocket_data()
 
-            # Send new flows immediately
             for flow in new_flows:
-                ws.send(json.dumps({"type": "packet", "data": flow}))
+                try:
+                    sock.send(json.dumps({"type": "packet", "data": flow}))
+                except:
+                    # Connection closed
+                    return
 
-            # Send stats if they were calculated
             if stats_data:
-                ws.send(json.dumps({"type": "stats", "data": stats_data}))
+                try:
+                    sock.send(json.dumps({"type": "stats", "data": stats_data}))
+                except:
+                    # Connection closed
+                    return
 
-            # Deliver any queued notifications (phishing / vulnerabilities)
             try:
                 notes = notifications.pop_all()
                 for note in notes:
+                    if sock.closed:
+                        break
                     if note['type'] == 'phishing':
-                        ws.send(json.dumps({"type": "phishing", "data": note['data']}))
+                        sock.send(json.dumps({"type": "phishing", "data": note['data']}))
                     elif note['type'] == 'vulnerability':
-                        ws.send(json.dumps({"type": "vulnerability", "data": note['data']}))
+                        sock.send(json.dumps({"type": "vulnerability", "data": note['data']}))
                     elif note['type'] == 'flow':
-                        ws.send(json.dumps({"type": "packet", "data": note['data']}))
+                        sock.send(json.dumps({"type": "packet", "data": note['data']}))
             except Exception:
                 pass
 
             time.sleep(0.2)
+            backoff = 0.2  # reset backoff on success
+
         except Exception as e:
-            print(f"WebSocket closed or error: {e}")
-            break
+            print(f"WebSocket error: {e}")
+            if sock.closed:
+                break
+            time.sleep(backoff)
+            backoff = min(backoff * 2, 5.0)  # exponential backoff
+
+    print("WebSocket connection closed")
 
 
 # --- 5. APPLICATION STARTUP ---

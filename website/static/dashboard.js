@@ -3,57 +3,161 @@
 let networkChart = null;
 let threatChart = null;
 
-const dashboardState = {
-    stats: {
-        packetsCaptures: 45231,
-        alerts: 12,
-        suspiciousUrls: 8,
-        vulnerableSites: 3
-    },
-    networkData: [
-        { time: '14:00', traffic: 450 },
-        { time: '14:05', traffic: 520 },
-        { time: '14:10', traffic: 380 },
-        { time: '14:15', traffic: 680 },
-        { time: '14:20', traffic: 590 },
-        { time: '14:25', traffic: 720 }
-    ]
-};
-
 document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
 });
 
 function initializeDashboard() {
-    renderAlerts();
+    updateRecentAlerts();
     renderTimeline();
     createNetworkChart();
     createThreatChart();
     startDashboardUpdates();
 }
 
-function renderAlerts() {
-    const alerts = [
-        { id: 1, time: '14:23:15', severity: 'critical', message: 'SQL Injection attempt detected on target.example.com' },
-        { id: 2, time: '14:20:42', severity: 'high', message: 'Phishing URL detected: malicious-site.com/login' },
-        { id: 3, time: '14:18:30', severity: 'medium', message: 'Unusual traffic pattern from IP 192.168.1.45' },
-        { id: 4, time: '14:15:12', severity: 'low', message: 'Port scan detected from external source' },
-        { id: 5, time: '14:10:05', severity: 'high', message: 'XSS vulnerability found in web application' }
-    ];
+async function updateDashboardStats() {
+    try {
+        const response = await fetch('/api/statistics');
+        const stats = await response.json();
 
+        // Update the Counter Cards
+        document.getElementById('packetsCount').textContent = stats.sessions.toLocaleString();
+        document.getElementById('alertsCount').textContent = stats.flows;
+        document.getElementById('urlsCount').textContent = stats.phishing_scans;
+        document.getElementById('vulnCount').textContent = stats.vulnerability_scans;
+
+        // Update Alert Badge (difference from last check or total)
+        const alertBadge = document.getElementById('alertBadge');
+        alertBadge.textContent = `+${stats.flows}`;
+        
+    } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+    }
+}
+
+async function updateCharts() {
+    const response = await fetch('/api/threat-breakdown');
+    const threatData = await response.json();
+
+    // Assuming threatChart is your Chart.js instance
+    threatChart.data.labels = threatData.labels;
+    threatChart.data.datasets[0].data = threatData.data;
+    threatChart.update();
+}
+
+async function updateActivityTimeline() {
+    const timeline = document.getElementById('timeline');
+    try {
+        const response = await fetch('/api/flows?limit=5');
+        const data = await response.json();
+        
+        timeline.innerHTML = ''; // Clear old items
+        
+        data.flows.forEach(flow => {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="timeline-time">${new Date(flow.created_at).toLocaleTimeString()}</div>
+                <div class="timeline-desc">
+                    Detected ${flow.protocol} flow from ${flow.src_ip} 
+                    ${flow.is_anomalous ? '<span class="text-danger">(Anomalous)</span>' : ''}
+                </div>
+            `;
+            timeline.appendChild(item);
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function checkSystemHealth() {
+    try {
+        const response = await fetch('/api/sessions/latest');
+        const { sessionId } = await response.json();
+        
+        if (sessionId) {
+            const statusRes = await fetch(`/api/sessions/${sessionId}/status`);
+            const status = await statusRes.json();
+            
+            // Find the Packet Sniffer health item
+            const healthItems = document.querySelectorAll('.health-item');
+            healthItems.forEach(item => {
+                const label = item.querySelector('span:first-child');
+                if (label && label.textContent === 'Packet Sniffer') {
+                    const statusSpan = item.querySelector('.health-status span:last-child');
+                    if (statusSpan) {
+                        if (status.isActive) {
+                            statusSpan.textContent = 'Running';
+                            statusSpan.className = 'status-running';
+                        } else {
+                            statusSpan.textContent = 'Idle';
+                            statusSpan.className = 'status-stopped';
+                        }
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to check system health:', error);
+    }
+}
+
+async function updateRecentAlerts() {
     const alertsList = document.getElementById('alertsList');
-    alertsList.innerHTML = alerts.map(alert => `
-        <div class="alert-item">
-            <span class="alert-severity ${alert.severity}">${alert.severity}</span>
-            <div class="alert-content">
-                <div class="alert-message">${alert.message}</div>
-                <div class="alert-time">${alert.time}</div>
-            </div>
-        </div>
-    `).join('');
+    if (!alertsList) return;
+
+    try {
+        const response = await fetch('/api/dashboard/alerts');
+        const alerts = await response.json();
+
+        if (alerts.length === 0) {
+            alertsList.innerHTML = '<div class="no-alerts">No recent security threats detected.</div>';
+            return;
+        }
+
+        alertsList.innerHTML = ''; // Clear placeholders
+
+        alerts.forEach(alert => {
+            const alertItem = document.createElement('div');
+            // Use your existing CSS classes for alert items
+            alertItem.className = `alert-item severity-${alert.severity}`;
+            
+            alertItem.innerHTML = `
+                <div class="alert-icon">
+                    ${getModuleIcon(alert.module)}
+                </div>
+                <div class="alert-content">
+                    <div class="alert-header">
+                        <span class="alert-module">${alert.module}</span>
+                        <span class="alert-time">${formatRelativeTime(alert.time)}</span>
+                    </div>
+                    <div class="alert-message">${alert.message}</div>
+                </div>
+                <div class="alert-badge">${alert.severity.toUpperCase()}</div>
+            `;
+            alertsList.appendChild(alertItem);
+        });
+    } catch (error) {
+        console.error("Error updating alerts:", error);
+    }
+}
+
+function getModuleIcon(module) {
+    switch(module) {
+        case 'Network': return '📡';
+        case 'Phishing': return '🎣';
+        case 'Vulnerability': return '🛡️';
+        default: return '⚠️';
+    }
+}
+
+function formatRelativeTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function renderTimeline() {
+    // Initial static timeline - will be replaced by updateActivityTimeline
     const activities = [
         { time: '14:25', event: 'Network scan completed - 245 hosts discovered' },
         { time: '14:20', event: 'Phishing detector updated threat database' },
@@ -81,10 +185,10 @@ function createNetworkChart() {
     networkChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: dashboardState.networkData.map(d => d.time),
+            labels: ['14:00', '14:05', '14:10', '14:15', '14:20', '14:25'],
             datasets: [{
                 label: 'Traffic',
-                data: dashboardState.networkData.map(d => d.traffic),
+                data: [450, 520, 380, 680, 590, 720],
                 borderColor: '#06b6d4',
                 backgroundColor: 'rgba(6, 182, 212, 0.1)',
                 borderWidth: 2,
@@ -127,22 +231,14 @@ function createNetworkChart() {
 }
 
 function createThreatChart() {
-    const threatData = [
-        { name: 'Malware', value: 35, color: '#ef4444' },
-        { name: 'Phishing', value: 28, color: '#f97316' },
-        { name: 'DDoS', value: 15, color: '#eab308' },
-        { name: 'SQL Injection', value: 12, color: '#06b6d4' },
-        { name: 'Other', value: 10, color: '#8b5cf6' }
-    ];
-
     const ctx = document.getElementById('threatChart').getContext('2d');
     threatChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: threatData.map(d => d.name),
+            labels: ['Network Anomalies', 'Phishing Links', 'Web Vulnerabilities'],
             datasets: [{
-                data: threatData.map(d => d.value),
-                backgroundColor: threatData.map(d => d.color),
+                data: [35, 28, 15],
+                backgroundColor: ['#ef4444', '#f97316', '#eab308'],
                 borderWidth: 0
             }]
         },
@@ -163,7 +259,11 @@ function createThreatChart() {
     });
 
     const legend = document.getElementById('threatLegend');
-    legend.innerHTML = threatData.map(item => `
+    legend.innerHTML = [
+        { name: 'Network Anomalies', value: 35, color: '#ef4444' },
+        { name: 'Phishing Links', value: 28, color: '#f97316' },
+        { name: 'Web Vulnerabilities', value: 15, color: '#eab308' }
+    ].map(item => `
         <div class="legend-item">
             <div class="legend-label">
                 <span class="legend-color" style="background-color: ${item.color}"></span>
@@ -175,55 +275,17 @@ function createThreatChart() {
 }
 
 function startDashboardUpdates() {
-    setInterval(() => {
-        // Update stats with animation
-        dashboardState.stats.packetsCaptures += Math.floor(Math.random() * 100);
-        
-        if (Math.random() > 0.8) {
-            dashboardState.stats.alerts++;
-            // Update badge with animation
-            const badge = document.getElementById('alertBadge');
-            badge.textContent = '+' + dashboardState.stats.alerts;
-            badge.style.animation = 'none';
-            setTimeout(() => {
-                badge.style.animation = 'pulse 0.5s ease-out';
-            }, 10);
-        }
-        
-        if (Math.random() > 0.9) dashboardState.stats.suspiciousUrls++;
-        if (Math.random() > 0.95) dashboardState.stats.vulnerableSites++;
-
-        // Animate counter updates
-        animateValue('packetsCount', dashboardState.stats.packetsCaptures);
-        document.getElementById('alertsCount').textContent = dashboardState.stats.alerts;
-        document.getElementById('urlsCount').textContent = dashboardState.stats.suspiciousUrls;
-        document.getElementById('vulnCount').textContent = dashboardState.stats.vulnerableSites;
-
-        // Update network chart
-        dashboardState.networkData.shift();
-        const lastTime = dashboardState.networkData[dashboardState.networkData.length - 1].time;
-        const [hours, minutes] = lastTime.split(':').map(Number);
-        const newMinutes = (minutes + 5) % 60;
-        const newTime = hours + ':' + String(newMinutes).padStart(2, '0');
-        
-        dashboardState.networkData.push({
-            time: newTime,
-            traffic: Math.floor(Math.random() * 400) + 300
-        });
-
-        if (networkChart) {
-            networkChart.data.labels = dashboardState.networkData.map(d => d.time);
-            networkChart.data.datasets[0].data = dashboardState.networkData.map(d => d.traffic);
-            networkChart.update('none');
-        }
-    }, 3000);
-}
-
-function animateValue(id, value) {
-    const element = document.getElementById(id);
-    element.textContent = value.toLocaleString();
-    element.style.animation = 'none';
-    setTimeout(() => {
-        element.style.animation = 'fadeIn 0.5s ease-out';
-    }, 10);
+    // Initialize and Set Interval
+    updateDashboardStats();
+    updateCharts();
+    updateActivityTimeline();
+    updateRecentAlerts();
+    checkSystemHealth();
+    
+    // Poll every 5 seconds for "Live" feel
+    setInterval(updateDashboardStats, 5000);
+    setInterval(updateCharts, 10000); // Update charts less frequently
+    setInterval(updateActivityTimeline, 15000); // Update timeline even less frequently
+    setInterval(updateRecentAlerts, 10000); // Update alerts every 10 seconds
+    setInterval(checkSystemHealth, 10000); // Check system health periodically
 }

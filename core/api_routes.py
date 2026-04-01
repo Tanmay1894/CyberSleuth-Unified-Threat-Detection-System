@@ -2,6 +2,7 @@
 
 from flask import Blueprint, jsonify, request
 from core.database import db
+from core import network_analysis, phishing_detector, web_scanner
 
 # Use a Blueprint instead of a global app
 api_bp = Blueprint("api", __name__)
@@ -30,16 +31,15 @@ def get_session(session_id):
         return jsonify({'error': str(e)}), 500
 
 
-@api_bp.route('/api/sessions/<int:sid>/status', methods=['GET'])
-def get_session_status(sid):
+@api_bp.route('/api/sessions/<int:session_id>/status', methods=['GET'])
+def get_session_status(session_id):
     """Check if session is actively scanning."""
-    from core.network_analysis import sniffing, currentdbsessionid
-
-    is_active = (currentdbsessionid == sid and sniffing)
+    from core.network_analysis import is_session_active
+    active = is_session_active(session_id)
     return jsonify({
-        'sessionId': sid,
-        'isActive': is_active,
-        'snifferStatus': 'active' if is_active else 'stopped'
+        "sessionId": session_id,
+        "isActive": active,
+        "status": "active" if active else "stopped"
     }), 200
 
 # --- Network Flows API ---
@@ -264,6 +264,161 @@ def get_statistics():
     try:
         stats = db.get_statistics()
         return jsonify(stats), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/api/threat-breakdown', methods=['GET'])
+def get_threat_breakdown():
+    """Get counts of different threat types for the pie chart."""
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            # Get counts from different modules
+            cursor.execute("SELECT COUNT(*) FROM network_flows WHERE is_anomalous = 1")
+            net_anomalies = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM phishing_scans WHERE final_verdict = 'MALICIOUS'")
+            phishing = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT COUNT(*) FROM vulnerability_scans WHERE status = 'completed'")
+            vulns = cursor.fetchone()[0]
+            
+            return jsonify({
+                'labels': ['Network Anomalies', 'Phishing Links', 'Web Vulnerabilities'],
+                'data': [net_anomalies, phishing, vulns]
+            }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/api/dashboard/alerts', methods=['GET'])
+def get_dashboard_alerts():
+    """Fetch the 10 most recent security alerts across all modules."""
+    alerts = []
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+
+            # 1. Get Anomalous Network Flows
+            cursor.execute('''
+                SELECT 'Network' as type, src_ip || ' -> ' || dst_ip as target, 
+                       anomaly_score as severity_val, created_at as ts
+                FROM network_flows WHERE is_anomalous = 1
+                ORDER BY created_at DESC LIMIT 5
+            ''')
+            for row in cursor.fetchall():
+                alerts.append({
+                    'module': row['type'],
+                    'message': f"Anomaly detected: {row['target']}",
+                    'severity': 'high' if row['severity_val'] > 0.8 else 'medium',
+                    'time': row['ts']
+                })
+
+            # 2. Get Malicious Phishing URLs
+            cursor.execute('''
+                SELECT 'Phishing' as type, url, final_verdict, timestamp as ts
+                FROM phishing_scans WHERE final_verdict IN ('MALICIOUS', 'SUSPICIOUS')
+                ORDER BY timestamp DESC LIMIT 5
+            ''')
+            for row in cursor.fetchall():
+                alerts.append({
+                    'module': row['type'],
+                    'message': f"Threat: {row['url'][:30]}...",
+                    'severity': 'critical' if row['final_verdict'] == 'MALICIOUS' else 'high',
+                    'time': row['ts']
+                })
+
+            # 3. Get Critical Vulnerabilities
+            cursor.execute('''
+                SELECT 'Vulnerability' as type, target_url, timestamp as ts, results
+                FROM vulnerability_scans WHERE status = 'completed'
+                ORDER BY timestamp DESC LIMIT 5
+            ''')
+            for row in cursor.fetchall():
+                import json
+                res = json.loads(row['results']) if row['results'] else {}
+                if res.get('overall_severity') in ['High', 'Critical']:
+                    alerts.append({
+                        'module': row['type'],
+                        'message': f"Vulnerability on {row['target_url']}",
+                        'severity': res.get('overall_severity').lower(),
+                        'time': row['ts']
+                    })
+
+        # Sort combined alerts by time descending
+        alerts.sort(key=lambda x: x['time'], reverse=True)
+        return jsonify(alerts[:10]), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# --- Network Capture API ---
+
+@api_bp.route('/api/sessions', methods=['POST'])
+def create_network_session():
+    return network_analysis.create_session_api()
+
+@api_bp.route('/api/sessions/<int:session_id>/start', methods=['POST'])
+def start_network_capture(session_id):
+    from core.network_analysis import load_ml_model
+    try:
+        load_ml_model()
+    except Exception:
+        pass
+    return network_analysis.start_capture_api(session_id)
+
+@api_bp.route('/api/sessions/<int:session_id>/stop', methods=['POST'])
+def stop_network_capture(session_id):
+    return network_analysis.stop_capture_api(session_id)
+
+@api_bp.route('/api/sessions/<int:session_id>/export.pcap', methods=['GET'])
+def export_network_pcap(session_id):
+    return network_analysis.export_pcap_api(session_id)
+
+# --- Security Analysis API ---
+
+@api_bp.route('/api/analyze/phishing', methods=['POST'])
+def api_phishing_detector():
+    """Endpoint to check a single URL for phishing manually."""
+    data = request.get_json(force=True, silent=True) or {}
+    url = data.get('url')
+    session_id = data.get('session_id')
+    if not url:
+        return jsonify({"error": "URL parameter missing"}), 400
+
+    result = phishing_detector.analyze_url(url, source="Manual", session_id=session_id)
+    return jsonify(result)
+
+@api_bp.route('/api/scan/web', methods=['POST'])
+def api_web_scanner():
+    """Endpoint to run a web vulnerability scan."""
+    data = request.get_json(force=True, silent=True) or {}
+    url = data.get('url')
+    session_id = data.get('session_id')
+    if not url:
+        return jsonify({"error": "URL parameter missing"}), 400
+
+    result = web_scanner.start_vulnerability_scan(session_id, url)
+    if isinstance(result, dict) and result.get('error'):
+        return jsonify(result), 500
+    return jsonify(result)
+
+@api_bp.route('/api/vuln/schedule', methods=['POST'])
+def add_vuln_schedule():
+    from apscheduler.schedulers.background import BackgroundScheduler
+    import time
+
+    schedule_data = request.json or {}
+
+    try:
+        scan_time = schedule_data.get('time', '09:00')
+        hours, minutes = scan_time.split(':')
+        job_id = f"vuln_scan_{schedule_data.get('id', int(time.time()))}"
+
+        # For now, we'll need to handle scheduler differently since it's in app.py
+        # This is a placeholder - the scheduler should be moved to a shared location
+        return jsonify({'error': 'Scheduler not available in Blueprint'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

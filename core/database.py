@@ -484,27 +484,31 @@ class DatabaseManager:
             conn.commit()
     
     def get_statistics(self):
-        """Get system statistics."""
+        """Get real-time system statistics from the database."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
             
-            cursor.execute('SELECT COUNT(*) as count FROM sessions')
-            total_sessions = cursor.fetchone()['count']
+            # Count total packets captured across all sessions
+            cursor.execute('SELECT SUM(packet_count) as count FROM network_flows')
+            total_packets = cursor.fetchone()['count'] or 0
             
-            cursor.execute('SELECT COUNT(*) as count FROM network_flows')
-            total_flows = cursor.fetchone()['count']
+            # Count high-risk network anomalies (Score > 0.7)
+            cursor.execute('SELECT COUNT(*) as count FROM network_flows WHERE anomaly_score > 0.7')
+            alerts = cursor.fetchone()['count'] or 0
             
-            cursor.execute('SELECT COUNT(*) as count FROM phishing_scans')
-            total_phishing = cursor.fetchone()['count']
+            # Count unique phishing URLs detected as MALICIOUS or SUSPICIOUS
+            cursor.execute("SELECT COUNT(*) as count FROM phishing_scans WHERE final_verdict IN ('MALICIOUS', 'SUSPICIOUS')")
+            phishing = cursor.fetchone()['count'] or 0
             
-            cursor.execute('SELECT COUNT(*) as count FROM vulnerability_scans')
-            total_vulns = cursor.fetchone()['count']
+            # Count completed vulnerability scans with findings
+            cursor.execute("SELECT COUNT(*) as count FROM vulnerability_scans WHERE status = 'completed'")
+            vulns = cursor.fetchone()['count'] or 0
             
             return {
-                'sessions': total_sessions,
-                'flows': total_flows,
-                'phishing_scans': total_phishing,
-                'vulnerability_scans': total_vulns
+                'sessions': total_packets, # Total Packets
+                'flows': alerts,           # Active Alerts
+                'phishing_scans': phishing, # Suspicious URLs
+                'vulnerability_scans': vulns # Vulnerable Sites
             }
 
 

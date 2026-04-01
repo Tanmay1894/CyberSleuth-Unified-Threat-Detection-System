@@ -196,8 +196,9 @@ class NetworkAnalysisApp {
             
             if (!response.ok) throw new Error('Failed to create session');
             
-            this.currentSession = await response.json();
-            this.currentSessionId = this.currentSession.db_session_id;
+            const data = await response.json();
+            this.currentSessionId = data.sessionId;
+            this.currentSession = data;
             localStorage.setItem('lastNetworkSessionId', this.currentSessionId);
             this.exportBtn.disabled = false;
             this.showToast('Session Created', 'New session created successfully', 'success');
@@ -694,37 +695,50 @@ class NetworkAnalysisApp {
             const state = JSON.parse(savedState);
             
             // Only restore if saved within current session (2 hours)
-            if (state.lastSaveTime && (now - state.lastSaveTime) < 7200000) {
-                this.packets = state.packets || [];
-                this.currentSessionId = state.currentSessionId;
-                this.sessionStartTime = state.sessionStartTime;
-                this.protocolFilter = state.protocolFilter || 'all';
-                this.ipFilter = state.ipFilter || '';
+            if (state.lastSaveTime && (now - state.lastSaveTime) < 7200000 && state.currentSessionId) {
+                // Validate that the session still exists
+                try {
+                    const response = await fetch(`/api/sessions/${state.currentSessionId}`);
+                    if (response.ok) {
+                        this.packets = state.packets || [];
+                        this.currentSessionId = state.currentSessionId;
+                        this.sessionStartTime = state.sessionStartTime;
+                        this.protocolFilter = state.protocolFilter || 'all';
+                        this.ipFilter = state.ipFilter || '';
 
-                // Check backend scanning status
-                const isScanningActive = await this.checkBackendScanningStatus();
+                        // Check backend scanning status
+                        const isScanningActive = await this.checkBackendScanningStatus();
 
-                if (isScanningActive) {
-                    this.statusIndicator.classList.add('active');
-                    this.startBtn.disabled = true;
-                    this.stopBtn.disabled = false;
-                    if (this.sessionStartTime) this.startDurationTimer();
-                    this.showToast('Scan Resumed', 'Background scanning continues...', 'success');
-                } else {
-                    this.startBtn.disabled = false;
-                    this.stopBtn.disabled = true;
+                        if (isScanningActive) {
+                            this.statusIndicator.classList.add('active');
+                            this.startBtn.disabled = true;
+                            this.stopBtn.disabled = false;
+                            if (this.sessionStartTime) this.startDurationTimer();
+                            this.showToast('Scan Resumed', 'Background scanning continues...', 'success');
+                        } else {
+                            this.startBtn.disabled = false;
+                            this.stopBtn.disabled = true;
+                        }
+                        
+                        // Restore filters
+                        if (this.protocolFilterEl) this.protocolFilterEl.value = this.protocolFilter;
+                        if (this.ipFilterEl) this.ipFilterEl.value = this.ipFilter;
+                        this.filterPackets();
+                        
+                        this.showToast('Session Restored', 
+                            `${this.packets.length} packets from current session`, 'info');
+
+                        console.log(`✅ Restored ${this.packets.length} packets (current session)`);
+                        return true;
+                    } else {
+                        // Session doesn't exist anymore, don't restore
+                        console.log('Session no longer exists, starting fresh');
+                        return false;
+                    }
+                } catch (error) {
+                    console.warn('Failed to validate session:', error);
+                    return false;
                 }
-                
-                // Restore filters
-                if (this.protocolFilterEl) this.protocolFilterEl.value = this.protocolFilter;
-                if (this.ipFilterEl) this.ipFilterEl.value = this.ipFilter;
-                this.filterPackets();
-                
-                this.showToast('Session Restored', 
-                    `${this.packets.length} packets from current session`, 'info');
-
-                console.log(`✅ Restored ${this.packets.length} packets (current session)`);
-                return true;
             }
         } catch (error) {
             console.warn('Failed to restore state:', error);

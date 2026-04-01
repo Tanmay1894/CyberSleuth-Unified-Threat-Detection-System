@@ -94,6 +94,69 @@
     color: #6b7280;
 }
 
+/* Updated Alert Styles for Live Data */
+.alert-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 4px solid transparent;
+}
+
+.severity-critical { border-left-color: #ff4444; background: rgba(255, 68, 68, 0.1); }
+.severity-high { border-left-color: #ffbb33; background: rgba(255, 187, 51, 0.1); }
+.severity-medium { border-left-color: #00C851; background: rgba(0, 200, 81, 0.1); }
+
+.alert-icon {
+    font-size: 1.2rem;
+    margin-right: 12px;
+}
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.alert-module {
+    font-weight: 600;
+    color: #d1d5db;
+    font-size: 0.875rem;
+}
+
+.alert-time {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.alert-message {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.alert-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.no-alerts {
+    text-align: center;
+    padding: 2rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
 /* System Health */
 .health-items {
     display: flex;
