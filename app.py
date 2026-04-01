@@ -213,14 +213,15 @@ if __name__ == "__main__":
     print("🚀 Initializing CyberSleuth Application")
     print("=" * 70)
 
-    try:
-        from core.phishing_detector import initialize_ml_model
-        print("\n[Phishing Detector] Loading ML model...")
-        initialize_ml_model()
-        print("✅ [Phishing Detector] ML model loaded successfully")
-    except Exception as e:
-        print(f"⚠️  [Phishing Detector] Warning: Could not load ML model: {e}")
-        print("    Phishing detection will use heuristics only")
+    # Temporarily disable heavy ML init to keep startup fast
+    # try:
+    #     from core.phishing_detector import initialize_ml_model
+    #     print("\n[Phishing Detector] Loading ML model...")
+    #     initialize_ml_model()
+    #     print("✅ [Phishing Detector] ML model loaded successfully")
+    # except Exception as e:
+    #     print(f"⚠️  [Phishing Detector] Warning: Could not load ML model: {e}")
+    #     print("    Phishing detection will use heuristics only")
 
     print("\n" + "=" * 70)
     print("✅ Application ready - Starting Flask server")

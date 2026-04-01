@@ -30,7 +30,7 @@ from core import notifications
 # CONFIGURATION & API CONSTANTS
 # ==========================================
 # Load API key from environment variable with fallback
-GSB_API_KEY = os.environ.get("GSB_API_KEY", "")
+GSB_API_KEY = os.environ.get("GSB_API_KEY", "AIzaSyBH1zd0bVR81zis0dcsjpVkeahAr6vO2kw")
 GSB_ENDPOINT = f"https://safebrowsing.googleapis.com/v4/threatMatches:find?key={GSB_API_KEY}"
 MODEL_PATH = "models/phishing_model.pkl"
 

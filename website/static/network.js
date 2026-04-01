@@ -17,14 +17,22 @@ class NetworkAnalysisApp {
         
         // 🚀 IMPROVED: Sequential startup with status check
         this.restoreState()
-            .then(restored => {
-                // Connect WebSocket regardless
+            .then(async (restored) => {
                 this.connectWebSocket();
 
-                if (restored && this.currentSessionId) {
-                    this.createSession();
+                if (!restored || !this.currentSessionId) {
+                    await this.createSession();
                 } else {
-                    this.createSession();
+                    // Optionally pull session details if you want this.currentSession
+                    try {
+                        const resp = await fetch(`/api/sessions/${this.currentSessionId}`);
+                        if (resp.ok) {
+                            this.currentSession = await resp.json();
+                            this.exportBtn.disabled = false;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to fetch restored session details:', e);
+                    }
                 }
             });
 
@@ -323,7 +331,7 @@ class NetworkAnalysisApp {
         }
         
         this.filterPackets();
-        this.updateTrafficChart(packet);
+        // REMOVE: this.updateTrafficChart(packet);
     }
 
     updateStats(stats) {
@@ -339,6 +347,7 @@ class NetworkAnalysisApp {
         
         this.updateProtocolChart(stats.protocolDistribution);
         this.updateTopSources(stats.topSources);
+        this.updateTrafficChart(stats.packetsPerSecond);
     }
 
     updateSession(sessionData) {
@@ -618,20 +627,20 @@ class NetworkAnalysisApp {
         this.topSources.innerHTML = sourcesHtml;
     }
 
-    updateTrafficChart(packet) {
-        // Add current packet rate to traffic data
+    updateTrafficChart(rate) {
+        if (typeof rate !== 'number' || !isFinite(rate)) {
+            return;
+        }
+
         this.trafficData.shift();
-        this.trafficData.push(Math.floor(Math.random() * 50) + 10); // Mock rate
-        
-        const maxRate = Math.max(...this.trafficData);
-        
-        const barsHtml = this.trafficData
-            .map(rate => {
-                const height = maxRate > 0 ? (rate / maxRate) * 100 : 0;
-                return `<div class="traffic-bar" style="height: ${height}%;" title="${rate} packets"></div>`;
-            })
-            .join('');
-        
+        this.trafficData.push(rate);
+
+        const maxRate = Math.max(...this.trafficData, 1);
+        const barsHtml = this.trafficData.map(value => {
+            const height = (value / maxRate) * 100;
+            return `<div class="traffic-bar" style="height: ${height}%" title="${value.toFixed(1)} pkt/s"></div>`;
+        }).join('');
+
         this.trafficChart.innerHTML = barsHtml;
     }
 
