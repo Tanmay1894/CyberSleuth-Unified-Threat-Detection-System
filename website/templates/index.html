@@ -13,7 +13,7 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h1 class="sidebar-title">CyberSleuth</h1>
+                <h1 class="sidebar-title logo-text">CyberSleuth</h1>
                 <button id="toggleSidebar" class="toggle-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15 18 9 12 15 6"></polyline>
@@ -22,32 +22,32 @@
             </div>
             
             <nav class="sidebar-nav">
-                <a href="{{ url_for('dashboard') }}" class="nav-item active">
+                <a href="{{ url_for('dashboard') }}" class="nav-item nav-link active" data-page="dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     </svg>
-                    <span>Dashboard</span>
+                    <span class="nav-text">Dashboard</span>
                 </a>
-                <a href="{{ url_for('network') }}" class="nav-item">
+                <a href="{{ url_for('network') }}" class="nav-item nav-link" data-page="network">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
-                    <span>Network Analysis</span>
+                    <span class="nav-text">Network Analysis</span>
                 </a>
-                <a href="{{ url_for('phishing') }}" class="nav-item">
+                <a href="{{ url_for('phishing') }}" class="nav-item nav-link" data-page="phishing">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
-                    <span>Phishing Detector</span>
+                    <span class="nav-text">Phishing Detector</span>
                 </a>
-                <a href="{{ url_for('vulnerability') }}" class="nav-item">
+                <a href="{{ url_for('vulnerability') }}" class="nav-item nav-link" data-page="vulnerability">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                    <span>Vulnerability Scanner</span>
+                    <span class="nav-text">Vulnerability Scanner</span>
                 </a>
             </nav>
             
@@ -192,9 +192,11 @@
                 </div>
             </div>
         </main>
+        <div class="mobile-overlay"></div>
     </div>
 
     <script src="{{url_for('static',filename='common.js')}}"></script>
+    <script src="{{url_for('static',filename='sidebar-manager.js')}}"></script>
     <script src="{{url_for('static',filename='dashboard.js')}}"></script>
 </body>
 </html>

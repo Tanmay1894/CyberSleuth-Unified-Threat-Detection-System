@@ -6,8 +6,16 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeSidebar() {
+    if (document.querySelector('script[src*="sidebar-manager.js"]')) {
+        return;
+    }
+
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
+
+    if (!toggleBtn || !sidebar) {
+        return;
+    }
 
     // Check localStorage for saved state
     const savedState = localStorage.getItem('sidebarCollapsed');

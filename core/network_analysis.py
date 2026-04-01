@@ -1,5 +1,8 @@
 # core/network_analysis.py
 
+import warnings
+warnings.filterwarnings("ignore", message="sklearn.utils.parallel.delayed")
+
 import threading
 import queue
 import time
@@ -15,6 +18,8 @@ import pandas as pd
 from scapy.utils import wrpcap, RawPcapWriter # Imported RawPcapWriter
 from scapy.all import AsyncSniffer, IP, TCP, UDP # Imported needed scapy modules
 from flask import jsonify, request, send_file # Imported Flask components needed for API functions
+from core.database import db
+from core import notifications
 
 # --- 1. Machine Learning Model & Feature Configuration ---
 MODEL_PATH = 'models/random_forest_model.pkl' # Adjusted path
@@ -73,6 +78,8 @@ packet_count_since_last_stat = 0
 last_stat_time = time.time()
 
 session_flows = deque(maxlen=5000)
+current_db_session_id = None
+currentdbsessionid = None
 
 # --- Configuration & Mappings ---
 FLOW_TIMEOUT = 120
@@ -304,17 +311,30 @@ def calculate_and_predict_flow(flow):
     total_bytes = sum(all_pkt_lengths)
     info = f"Pkts: {len(fwd_packets)}+{len(bwd_packets)} | Dur: {dur:.2f}s"
 
-    return {
-        "id": flow["id"], "timestamp": flow["start_time"] * 1000,
-        "sourceIp": flow["srcip"], "destinationIp": flow["dstip"],
-        "protocol": flow["proto"], "size": total_bytes, "info": info,
-        "anomalyScore": score,
+    packet_count = len(packets)
+    duration = features['Flow Duration'] / 1_000_000 if features.get('Flow Duration') else 0
+
+    flow_record = {
+        "id": flow["id"],
+        "timestamp": int(flow["start_time"] * 1000),
+        "sourceIp": flow["srcip"],
+        "destinationIp": flow["dstip"],
+        "protocol": flow["proto"],
+        "size": total_bytes,
+        "info": info,
+        "anomalyScore": float(score),
+        "packet_count": packet_count,
+        "duration": duration,
         "headers": {"Source Port": flow.get("sport"), "Destination Port": flow.get("dsport"), "Service": service},
-        "payload": "Payload data not inspected."
+        "payload": "Payload data not inspected.",
+        # include feature vector for debugging / storage
+        "flow_data": features
     }
 
+    return flow_record
+
 def flow_monitor():
-    global sniffing
+    global sniffing, current_db_session_id
     while sniffing:
         flows_to_remove = []
         current_time = time.time()
@@ -335,24 +355,31 @@ def flow_monitor():
 
 def create_session_api():
     """Handles the API call to create a new session."""
-    global session_id_counter
-    session_id_counter += 1
-    session_name = request.json.get("name", f"Session {session_id_counter}")
+    global current_db_session_id, currentdbsessionid
+    session_name = request.json.get("name", f"Session {int(time.time())}")
+    db_session_id = db.create_session()
+    current_db_session_id = db_session_id
+    currentdbsessionid = db_session_id
 
     session = {
-        "id": session_id_counter,
+        "id": db_session_id,
+        "db_session_id": db_session_id,
         "name": session_name,
-        "startTime": time.time() * 1000, # in milliseconds
+        "startTime": time.time() * 1000,
         "endTime": None,
         "packets": [],
     }
-    sessions[session_id_counter] = session
+    sessions[db_session_id] = session
     return jsonify(session)
 
 
 def start_capture_api(sid):
     """Handles the API call to start packet sniffing."""
     global sniffer, sniffing, flow_state, flow_id_counter, packet_count_since_last_stat, last_stat_time, captured_packets
+
+    global current_db_session_id, currentdbsessionid
+    current_db_session_id = sid
+    currentdbsessionid = sid
 
     if not sniffing:
         flow_state.clear()
@@ -374,7 +401,7 @@ def start_capture_api(sid):
 
 def stop_capture_api(sid):
     """Handles the API call to stop sniffing and save the PCAP."""
-    global sniffer, sniffing, captured_packets
+    global sniffer, sniffing, captured_packets, current_db_session_id, currentdbsessionid
 
     if sniffing and sniffer is not None:
         sniffer.stop()
@@ -392,6 +419,14 @@ def stop_capture_api(sid):
             wrpcap(f"sessions/session_{sid}.pcap", captured_packets)
         else:
             print("No packets captured to save.")
+        try:
+            db.close_session(sid)
+        except Exception:
+            pass
+
+    if current_db_session_id == sid:
+        current_db_session_id = None
+        currentdbsessionid = None
 
     return jsonify({"result": "stopped", "sessionId": sid})
 
@@ -415,6 +450,28 @@ def get_websocket_data():
         flow = completed_flows_queue.get()
         session_flows.append(flow)
         new_flows.append(flow)
+
+        # Persist each finalized flow to the database and push notification
+        try:
+            # map fields expected by DB
+            mapped = {
+                'src_ip': flow.get('sourceIp'),
+                'dst_ip': flow.get('destinationIp'),
+                'src_port': flow.get('headers', {}).get('Source Port'),
+                'dst_port': flow.get('headers', {}).get('Destination Port'),
+                'protocol': flow.get('protocol'),
+                'packet_count': flow.get('packet_count', 0),
+                'byte_count': flow.get('size', 0),
+                'duration': flow.get('duration', 0),
+                'anomaly_score': flow.get('anomalyScore', 0),
+                # store the full UI-friendly flow record for historical retrieval
+                'flow_data': flow
+            }
+            db.save_flow(current_db_session_id, mapped)
+            # push the UI flow object to WebSocket notifications
+            notifications.push_flow(flow)
+        except Exception as e:
+            print(f"Error saving/pushing flow: {e}")
 
     current_time = time.time()
     time_delta = current_time - last_stat_time

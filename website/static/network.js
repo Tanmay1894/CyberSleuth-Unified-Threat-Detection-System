@@ -10,12 +10,29 @@ class NetworkAnalysisApp {
         this.sessionStartTime = null;
         this.durationInterval = null;
         this.trafficData = Array(20).fill(0);
+        this.currentSessionId = null;
         
         this.initializeElements();
         this.bindEvents();
-        this.connectWebSocket();
-        this.createSession();
-        this.initTrafficChart();
+        
+        // 🚀 IMPROVED: Sequential startup with status check
+        this.restoreState()
+            .then(restored => {
+                // Connect WebSocket regardless
+                this.connectWebSocket();
+
+                if (restored && this.currentSessionId) {
+                    this.createSession();
+                } else {
+                    this.createSession();
+                }
+            });
+
+        this.loadHistoricalData().catch(err => {
+            console.warn('Failed to load historical data:', err);
+        });
+
+        window.addEventListener('beforeunload', () => this.saveState());
     }
 
     initializeElements() {
@@ -59,14 +76,21 @@ class NetworkAnalysisApp {
     }
 
     bindEvents() {
-        this.toggleSidebarBtn.addEventListener('click', () => {
-        this.sidebar.classList.toggle('collapsed');
-        });
+        if (!window.unifiedSidebar && this.toggleSidebarBtn && this.sidebar) {
+            this.toggleSidebarBtn.addEventListener('click', () => {
+                this.sidebar.classList.toggle('collapsed');
+            });
+        }
 
         this.startBtn.addEventListener('click', () => this.startCapture());
         this.stopBtn.addEventListener('click', () => this.stopCapture());
         this.exportBtn.addEventListener('click', () => this.exportData());
         this.clearBtn.addEventListener('click', () => this.clearData());
+
+        this.clearSessionBtn = document.getElementById('clearSessionBtn');
+        if (this.clearSessionBtn) {
+            this.clearSessionBtn.addEventListener('click', () => this.clearSessionData());
+        }
         
         this.protocolFilterEl.addEventListener('change', (e) => {
             this.protocolFilter = e.target.value;
@@ -77,6 +101,31 @@ class NetworkAnalysisApp {
             this.ipFilter = e.target.value;
             this.filterPackets();
         });
+    }
+
+    async loadHistoricalData() {
+        try {
+            const lastSessionId = localStorage.getItem('lastNetworkSessionId');
+
+            if (lastSessionId && this.currentSessionId !== lastSessionId) {
+                const response = await fetch(`/api/flows/${lastSessionId}`);
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.flows && data.flows.length > 0) {
+                        data.flows.forEach(flow => {
+                            this.addPacket(flow.flowdata || flow.flow_data || flow);
+                        });
+
+                        this.showToast('Historical Data Loaded', 
+                            `${data.flows.length} flows restored from database`, 'success');
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to load historical data:', error);
+        }
     }
 
     connectWebSocket() {
@@ -140,6 +189,8 @@ class NetworkAnalysisApp {
             if (!response.ok) throw new Error('Failed to create session');
             
             this.currentSession = await response.json();
+            this.currentSessionId = this.currentSession.db_session_id;
+            localStorage.setItem('lastNetworkSessionId', this.currentSessionId);
             this.exportBtn.disabled = false;
             this.showToast('Session Created', 'New session created successfully', 'success');
         } catch (error) {
@@ -148,10 +199,17 @@ class NetworkAnalysisApp {
     }
 
     async startCapture() {
-        if (!this.currentSession) return;
+        const isAlreadyScanning = await this.checkBackendScanningStatus();
+        if (isAlreadyScanning) {
+            this.showToast('Already Scanning', 'Scan is already running in background', 'warning');
+            return;
+        }
+
+        const sessionId = this.currentSession?.id || this.currentSessionId;
+        if (!sessionId) return;
         
         try {
-            const response = await fetch(`/api/sessions/${this.currentSession.id}/start`, {
+            const response = await fetch(`/api/sessions/${sessionId}/start`, {
                 method: 'POST'
             });
             
@@ -169,10 +227,15 @@ class NetworkAnalysisApp {
     }
 
     async stopCapture() {
-        if (!this.currentSession) return;
+        if (!this.currentSessionId) {
+            this.showToast('No Active Session', 'Please start a new scan first', 'error');
+            return;
+        }
+
+        const sessionId = this.currentSession?.id || this.currentSessionId;
         
         try {
-            const response = await fetch(`/api/sessions/${this.currentSession.id}/stop`, {
+            const response = await fetch(`/api/sessions/${sessionId}/stop`, {
                 method: 'POST'
             });
             
@@ -221,14 +284,38 @@ class NetworkAnalysisApp {
         this.showToast('Session Cleared', 'All packet data has been cleared', 'success');
     }
 
+    clearSessionData() {
+        sessionStorage.clear();
+        localStorage.removeItem('lastNetworkSessionId');
+
+        location.reload();
+        this.showToast('New Session', 'All data cleared - fresh start', 'success');
+    }
+
     addPacket(packetData) {
-        const packet = {
+        const normalizedPacket = {
             ...packetData,
-            timestamp: new Date(packetData.timestamp),
-            anomalyScore: packetData.anomalyScore || 0
+            sourceIp: packetData.sourceIp || packetData.src_ip || packetData.source_ip || packetData.srcIp || '-',
+            destinationIp: packetData.destinationIp || packetData.dst_ip || packetData.destination_ip || packetData.dstIp || '-',
+            protocol: packetData.protocol || 'UNKNOWN',
+            size: packetData.size || packetData.byte_count || packetData.length || 0,
+            info: packetData.info || packetData.description || '',
+            anomalyScore: packetData.anomalyScore ?? packetData.anomaly_score ?? 0,
+            id: packetData.id || packetData.flow_id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            timestamp: packetData.timestamp || packetData.created_at || new Date().toISOString()
+        };
+
+        const packet = {
+            ...normalizedPacket,
+            timestamp: new Date(normalizedPacket.timestamp)
         };
         
         this.packets.unshift(packet);
+
+        // Auto-save every 30 packets
+        if (this.packets.length % 30 === 0 && this.packets.length > 0) {
+            this.saveState();
+        }
         
         // Keep only last 1000 packets
         if (this.packets.length > 1000) {
@@ -550,6 +637,106 @@ class NetworkAnalysisApp {
 
     initTrafficChart() {
         this.updateTrafficChart();
+    }
+
+    // 🚀 NEW: Save current state to sessionStorage
+    saveState() {
+        if (this.packets.length === 0) return;
+        
+        const state = {
+            packets: this.packets.slice(0, 500),
+            currentSessionId: this.currentSessionId,
+            sessionStartTime: this.sessionStartTime,
+            protocolFilter: this.protocolFilter,
+            ipFilter: this.ipFilter,
+            lastSaveTime: Date.now()
+        };
+        
+        try {
+            sessionStorage.setItem('networkAnalysisState', JSON.stringify(state));
+            localStorage.setItem('lastNetworkSessionId', this.currentSessionId || '');
+            console.log(`💾 Saved ${state.packets.length} packets (current session)`);
+        } catch (error) {
+            console.warn('Failed to save state:', error);
+        }
+    }
+
+    // 🚀 NEW: Restore saved state
+    async restoreState() {
+        try {
+            // 🚀 NEW: Check if this is a FRESH app start
+            const appStartTime = sessionStorage.getItem('appStartTime');
+            const now = Date.now();
+
+            // If no appStartTime OR > 5 minutes since app start → FRESH START
+            const isFreshStart = !appStartTime || (now - parseInt(appStartTime) > 300000);
+
+            if (isFreshStart) {
+                // 🚀 NEW: Fresh app start → CLEAR everything
+                sessionStorage.removeItem('networkAnalysisState');
+                sessionStorage.setItem('appStartTime', now.toString());
+                console.log('🆕 Fresh app start - cleared previous session data');
+                return false;
+            }
+
+            const savedState = sessionStorage.getItem('networkAnalysisState');
+            if (!savedState) return false;
+            
+            const state = JSON.parse(savedState);
+            
+            // Only restore if saved within current session (2 hours)
+            if (state.lastSaveTime && (now - state.lastSaveTime) < 7200000) {
+                this.packets = state.packets || [];
+                this.currentSessionId = state.currentSessionId;
+                this.sessionStartTime = state.sessionStartTime;
+                this.protocolFilter = state.protocolFilter || 'all';
+                this.ipFilter = state.ipFilter || '';
+
+                // Check backend scanning status
+                const isScanningActive = await this.checkBackendScanningStatus();
+
+                if (isScanningActive) {
+                    this.statusIndicator.classList.add('active');
+                    this.startBtn.disabled = true;
+                    this.stopBtn.disabled = false;
+                    if (this.sessionStartTime) this.startDurationTimer();
+                    this.showToast('Scan Resumed', 'Background scanning continues...', 'success');
+                } else {
+                    this.startBtn.disabled = false;
+                    this.stopBtn.disabled = true;
+                }
+                
+                // Restore filters
+                if (this.protocolFilterEl) this.protocolFilterEl.value = this.protocolFilter;
+                if (this.ipFilterEl) this.ipFilterEl.value = this.ipFilter;
+                this.filterPackets();
+                
+                this.showToast('Session Restored', 
+                    `${this.packets.length} packets from current session`, 'info');
+
+                console.log(`✅ Restored ${this.packets.length} packets (current session)`);
+                return true;
+            }
+        } catch (error) {
+            console.warn('Failed to restore state:', error);
+        }
+        return false;
+    }
+
+    // 🚀 NEW: Check if scanning is ACTIVE in backend
+    async checkBackendScanningStatus() {
+        if (!this.currentSessionId) return false;
+        
+        try {
+            const response = await fetch(`/api/sessions/${this.currentSessionId}/status`);
+            if (response.ok) {
+                const status = await response.json();
+                return status.isActive === true;
+            }
+        } catch (error) {
+            console.warn('Could not check backend status:', error);
+        }
+        return false;
     }
 
     resetStats() {

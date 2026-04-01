@@ -12,7 +12,7 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h1 class="sidebar-title">CyberSleuth</h1>
+                <h1 class="sidebar-title logo-text">CyberSleuth</h1>
                 <button id="toggleSidebar" class="toggle-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="15 18 9 12 15 6"></polyline>
@@ -21,32 +21,32 @@
             </div>
             
             <nav class="sidebar-nav">
-                <a href="{{ url_for('dashboard') }}" class="nav-item">
+                <a href="{{ url_for('dashboard') }}" class="nav-item nav-link" data-page="dashboard">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     </svg>
-                    <span>Dashboard</span>
+                    <span class="nav-text">Dashboard</span>
                 </a>
-                <a href="{{ url_for('network') }}" class="nav-item">
+                <a href="{{ url_for('network') }}" class="nav-item nav-link" data-page="network">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                         <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                     </svg>
-                    <span>Network Analysis</span>
+                    <span class="nav-text">Network Analysis</span>
                 </a>
-                <a href="{{ url_for('phishing') }}" class="nav-item active">
+                <a href="{{ url_for('phishing') }}" class="nav-item nav-link active" data-page="phishing">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
-                    <span>Phishing Detector</span>
+                    <span class="nav-text">Phishing Detector</span>
                 </a>
-                <a href="{{ url_for('vulnerability') }}" class="nav-item">
+                <a href="{{ url_for('vulnerability') }}" class="nav-item nav-link" data-page="vulnerability">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
                         <line x1="12" y1="9" x2="12" y2="13"></line>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                    <span>Vulnerability Scanner</span>
+                    <span class="nav-text">Vulnerability Scanner</span>
                 </a>
             </nav>
             
@@ -62,23 +62,38 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content page-content phishing-page">
             <div class="page-header">
                 <h1>Phishing URL Detector</h1>
                 <p>Analyze URLs for potential phishing threats</p>
             </div>
 
             <div class="card scan-card">
-                <h2>Scan URL</h2>
-                <div class="scan-input-group">
-                    <input type="text" id="phishingUrlInput" placeholder="Enter URL to scan (e.g., https://example.com)" class="scan-input">
-                    <button id="phishingScanBtn" class="btn btn-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.35-4.35"></path>
-                        </svg>
-                        Scan
-                    </button>
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <h2>Scan URL</h2>
+                        <div class="scan-input-group">
+                            <input type="text" id="phishingUrlInput" placeholder="Enter URL to scan (e.g., https://example.com)" class="scan-input">
+                            <button id="phishingScanBtn" class="btn btn-primary">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="m21 21-4.35-4.35"></path>
+                                </svg>
+                                Scan
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: flex-end; gap: 10px;">
+                        <h3 style="margin: 0; font-size: 14px; color: #888;">Browser Monitoring</h3>
+                        <button id="monitoringToggleBtn" class="btn btn-primary" style="background: #4CAF50;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Start Monitoring
+                        </button>
+                        <div id="monitoringStatus" style="font-size: 12px; color: #666; text-align: center;">Idle</div>
+                    </div>
                 </div>
             </div>
 
@@ -115,9 +130,28 @@
                         </div>
                     </div>
 
-                    <div class="card history-card">
-                        <h2>Scan History</h2>
-                        <div id="phishingHistory" class="history-list"></div>
+                    <div>
+                        <div class="card history-card">
+                            <h2>Scan History</h2>
+                            <div class="results-container">
+                                <div class="table-header result-row">
+                                    <div class="url">URL</div>
+                                    <div class="risk">Risk Score</div>
+                                    <div class="status">Status</div>
+                                    <div class="timestamp">Time</div>
+                                    <div class="source">Source</div>
+                                    <div class="detection-method">Detection</div>
+                                </div>
+                                <div id="resultsContainer"></div>
+                            </div>
+                        </div>
+
+                        <div class="card browser-history-card">
+                            <h2>Browser History <span id="browserHistoryCount" style="font-size: 12px; color: #999;">(0 URLs)</span></h2>
+                            <div id="browserHistory" class="history-list" style="max-height: 400px; overflow-y: auto;">
+                                <p style="color: #999; text-align: center; padding: 20px;">Start monitoring to see browser history</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -130,9 +164,11 @@
                 <p>Enter a URL above to start scanning for phishing threats</p>
             </div>
         </main>
+        <div class="mobile-overlay"></div>
     </div>
 
     <script src="{{ url_for('static', filename='common.js') }}"></script>
+    <script src="{{ url_for('static', filename='sidebar-manager.js') }}"></script>
     <script src="{{ url_for('static', filename='phishing.js') }}"></script>
 </body>
 </html>

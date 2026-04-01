@@ -379,3 +379,122 @@ body {
         gap: 1rem;
     }
 }
+
+/* 🚀 UNIFIED SIDEBAR SYSTEM - Add to common.css */
+#sidebar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed;
+    z-index: 1000;
+}
+
+#sidebar.collapsed {
+    width: 72px !important;
+}
+
+#sidebar .nav-link {
+    position: relative;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+#sidebar .nav-link.active {
+    background: linear-gradient(90deg, rgba(0,212,255,0.2), transparent) !important;
+    color: white !important;
+    border-left-color: #00d4ff !important;
+    font-weight: 600;
+}
+
+#sidebar .nav-link:hover {
+    transform: translateX(4px);
+    border-left-color: #00d4ff;
+}
+
+#sidebar.collapsed .nav-text,
+#sidebar.collapsed .logo-text {
+    opacity: 0 !important;
+}
+
+.main-content, .page-content {
+    margin-left: 260px;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+}
+
+#sidebar.collapsed ~ .main-content,
+#sidebar.collapsed ~ .page-content {
+    margin-left: 72px !important;
+}
+
+/* 🚀 NETWORK PAGE EMERGENCY FIX */
+#network-container,
+.network-main {
+    margin-left: 260px !important;
+    transition: margin-left 0.3s ease;
+}
+
+#sidebar.collapsed ~ #network-container,
+#sidebar.collapsed ~ .network-main {
+    margin-left: 72px !important;
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+#sidebar.mobile-open ~ .mobile-overlay {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+@media (max-width: 768px) {
+    #sidebar { transform: translateX(-100%); width: 280px !important; }
+    #sidebar.mobile-open { transform: translateX(0) !important; }
+    .main-content, .page-content { margin-left: 0 !important; }
+}
+
+/* 🚀 FULL HEIGHT SIDEBAR - Add to common.css */
+html, body {
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: hidden;
+}
+
+#sidebar {
+    height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    position: fixed !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh;
+}
+
+/* Ensure main content also full height */
+.main-content, .page-content {
+    min-height: 100vh !important;
+    margin-left: 260px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Fix collapsed state */
+#sidebar.collapsed ~ .main-content,
+#sidebar.collapsed ~ .page-content {
+    margin-left: 72px !important;
+}

@@ -1,0 +1,84 @@
+import pandas as pd
+import numpy as np
+import joblib
+from ucimlrepo import fetch_ucirepo
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score
+)
+
+def train_phishing_model():
+    print("Step 1: Fetching UCI Phishing Websites Dataset (ID: 327)...")
+    try:
+        # Fetch dataset using the provided UCI code
+        phishing_websites = fetch_ucirepo(id=327)
+
+        # Data as pandas dataframes
+        X = phishing_websites.data.features
+        y = phishing_websites.data.targets
+
+        # Flatten target if necessary (y is usually a 1D column)
+        y = np.ravel(y)
+
+        print(f"Dataset Loaded: {X.shape[0]} samples with {X.shape[1]} features.")
+    except Exception as e:
+        print(f"Error fetching dataset: {e}")
+        return
+
+    # Step 2: Data Splitting
+    # 80% Training, 20% Testing as specified in dataset_guide.md
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42, stratify=y
+    )
+
+    # Step 3: Model Selection - Random Forest
+    print("\nStep 2: Training Random Forest Classifier...")
+    # n_estimators=100 is standard, random_state ensures reproducibility
+    rf_model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
+
+    # 5-Fold Cross Validation for generalization check
+    cv_scores = cross_val_score(rf_model, X_train, y_train, cv=5)
+    print(f"Cross-Validation Accuracy Mean: {cv_scores.mean():.4f}")
+
+    # Fit the model
+    rf_model.fit(X_train, y_train)
+
+    # Step 4: Detailed ML Score Evaluation
+    print("\n--- Final ML Performance Scores ---")
+    y_pred = rf_model.predict(X_test)
+
+    # Calculating specific metrics
+    acc = accuracy_score(y_test, y_pred)
+    prec = precision_score(y_test, y_pred, average='weighted')
+    rec = recall_score(y_test, y_pred, average='weighted')
+    f1 = f1_score(y_test, y_pred, average='weighted')
+
+    print(f"Accuracy Score:  {acc:.4f} (Overall correctness)")
+    print(f"Precision Score: {prec:.4f} (Ability to not label a safe URL as phishing)")
+    print(f"Recall Score:    {rec:.4f} (Ability to find all phishing URLs)")
+    print(f"F1 Score:        {f1:.4f} (Harmonic mean of precision and recall)")
+
+    print("\n--- Full Classification Report ---")
+    print(classification_report(y_test, y_pred))
+
+    # Step 5: Explainability (Feature Importance)
+    print("\n--- Top 5 Most Significant Features ---")
+    importances = rf_model.feature_importances_
+    feature_names = X.columns
+    feature_importance_df = pd.DataFrame({'feature': feature_names, 'importance': importances})
+    feature_importance_df = feature_importance_df.sort_values(by='importance', ascending=False)
+    print(feature_importance_df.head(5))
+
+    # Step 6: Save the Model
+    model_filename = 'models/phishing_model.pkl'
+    joblib.dump(rf_model, model_filename)
+    print(f"\nSuccess! Model saved as '{model_filename}'")
+
+if __name__ == "__main__":
+    train_phishing_model()

@@ -1,3 +1,35 @@
+/* 🚀 NETWORK PAGE LAYOUT FIX - Add to TOP of network.css */
+.page-content {
+    margin-left: 260px !important;
+    min-height: 100vh;
+    background: #0a0a0a;
+    padding: 20px;
+}
+
+#sidebar.collapsed ~ .page-content {
+    margin-left: 72px !important;
+}
+
+/* Prevent double offset when .main-content is nested inside .page-content */
+.network-page .main-content {
+    margin-left: 0 !important;
+    padding: 0 !important;
+}
+
+/* Preserve your existing network layout */
+.network-container,
+.packet-table-container,
+.controls-container {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* Fix table responsiveness */
+.packet-table-wrapper {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
 * {
     margin: 0;
     padding: 0;
