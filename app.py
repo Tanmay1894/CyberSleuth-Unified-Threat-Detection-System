@@ -8,16 +8,11 @@ import json
 import atexit
 import importlib
 
-try:
-    _apscheduler_bg = importlib.import_module('apscheduler.schedulers.background')
-    BackgroundScheduler = getattr(_apscheduler_bg, 'BackgroundScheduler', None)
-except Exception:
-    BackgroundScheduler = None
-
 # Import the core logic functions and globals
 from core.api_routes import register_api_endpoints
 from core import notifications
 from core.network_analysis import get_websocket_data
+from core.scheduler import scheduler
 
 
 # Initialize Flask and configure paths
@@ -26,65 +21,8 @@ app = Flask(__name__,
             static_folder='website/static')
 sock = Sock(app)
 
-scheduler = BackgroundScheduler() if BackgroundScheduler else None
-if scheduler:
-    scheduler.start()
-
-# Register API endpoints
+# Register API endpoints early
 register_api_endpoints(app)
-
-
-def scheduled_vuln_scan():
-    """Run vulnerability scans on suspicious phishing links."""
-    try:
-        from core.database import db
-        from core.web_scanner import scan_website
-
-        suspicious_links = db.get_suspicious_phishing_links(risk_threshold=70)
-        for link in suspicious_links[:5]:
-            try:
-                vuln_result = scan_website(link['url'])
-                scan_record = {
-                    'url': link['url'],
-                    'target_url': link['url'],
-                    'phishing_url': link['url'],
-                    'phishing_risk': link.get('risk_score', 0),
-                    'vulnerabilities': vuln_result.get('findings', []),
-                    'severity': vuln_result.get('overall_severity', 'Info'),
-                    'source': 'scheduled-auto',
-                    'status': 'completed',
-                    **vuln_result
-                }
-                db.save_vulnerability_scan(scan_record)
-            except Exception as inner_error:
-                print(f"Scheduled auto-scan failed for {link.get('url')}: {inner_error}")
-    except Exception as e:
-        print(f"Scheduled vulnerability scan error: {e}")
-
-
-@app.route('/api/vuln/schedule', methods=['POST'])
-def add_vuln_schedule():
-    schedule_data = request.json or {}
-
-    if not scheduler:
-        return jsonify({'error': 'APScheduler is not installed'}), 500
-
-    try:
-        scan_time = schedule_data.get('time', '09:00')
-        hours, minutes = scan_time.split(':')
-        job_id = f"vuln_scan_{schedule_data.get('id', int(time.time()))}"
-
-        scheduler.add_job(
-            scheduled_vuln_scan,
-            'cron',
-            hour=int(hours),
-            minute=int(minutes),
-            id=job_id,
-            replace_existing=True
-        )
-        return jsonify({'status': 'scheduled', 'job_id': job_id}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 
 # --- 1. ROUTING FOR NAVIGATION ---
@@ -118,52 +56,34 @@ def vulnerability():
 # --- 4. WEBSOCKET ROUTE ---
 
 @sock.route("/ws")
-def ws(sock):
-    backoff = 0.2
-
+def ws(ws_connection):
+    print("🚀 WebSocket connection established")
+    
     while True:
         try:
+            # 1. Fetch real-time packet data and stats
             new_flows, stats_data = get_websocket_data()
 
             for flow in new_flows:
-                try:
-                    sock.send(json.dumps({"type": "packet", "data": flow}))
-                except:
-                    # Connection closed
-                    return
+                ws_connection.send(json.dumps({"type": "packet", "data": flow}))
 
             if stats_data:
-                try:
-                    sock.send(json.dumps({"type": "stats", "data": stats_data}))
-                except:
-                    # Connection closed
-                    return
+                ws_connection.send(json.dumps({"type": "stats", "data": stats_data}))
 
-            try:
-                notes = notifications.pop_all()
-                for note in notes:
-                    if sock.closed:
-                        break
-                    if note['type'] == 'phishing':
-                        sock.send(json.dumps({"type": "phishing", "data": note['data']}))
-                    elif note['type'] == 'vulnerability':
-                        sock.send(json.dumps({"type": "vulnerability", "data": note['data']}))
-                    elif note['type'] == 'flow':
-                        sock.send(json.dumps({"type": "packet", "data": note['data']}))
-            except Exception:
-                pass
+            # 2. Fetch and send Phishing/Vulnerability notifications
+            notes = notifications.pop_all()
+            for note in notes:
+                ws_connection.send(json.dumps({
+                    "type": note['type'], 
+                    "data": note['data']
+                }))
 
-            time.sleep(0.2)
-            backoff = 0.2  # reset backoff on success
+            time.sleep(0.5)
 
         except Exception as e:
-            print(f"WebSocket error: {e}")
-            if sock.closed:
-                break
-            time.sleep(backoff)
-            backoff = min(backoff * 2, 5.0)  # exponential backoff
-
-    print("WebSocket connection closed")
+            # This try-except block is the correct way to detect a closed connection
+            print(f"WebSocket disconnected: {e}")
+            break
 
 
 # --- 5. APPLICATION STARTUP ---
@@ -175,15 +95,20 @@ if __name__ == "__main__":
     print("🚀 Initializing CyberSleuth Application")
     print("=" * 70)
 
-    # Temporarily disable heavy ML init to keep startup fast
-    # try:
-    #     from core.phishing_detector import initialize_ml_model
-    #     print("\n[Phishing Detector] Loading ML model...")
-    #     initialize_ml_model()
-    #     print("✅ [Phishing Detector] ML model loaded successfully")
-    # except Exception as e:
-    #     print(f"⚠️  [Phishing Detector] Warning: Could not load ML model: {e}")
-    #     print("    Phishing detection will use heuristics only")
+    # --- NEW: Pre-load the Network ML model in the background ---
+    import threading
+    def preload_network_model():
+        try:
+            print("\n[Network Analysis] Pre-loading ML model in background...")
+            from core.network_analysis import load_ml_model
+            load_ml_model()
+            print("✅ [Network Analysis] ML model loaded successfully and ready!")
+        except Exception as e:
+            print(f"⚠️ [Network Analysis] Warning: Could not load ML model: {e}")
+
+    # Launch the thread so it doesn't block the server from starting
+    threading.Thread(target=preload_network_model, daemon=True).start()
+    # ------------------------------------------------------------
 
     print("\n" + "=" * 70)
     print("✅ Application ready - Starting Flask server")

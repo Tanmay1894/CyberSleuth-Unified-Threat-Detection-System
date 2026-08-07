@@ -73,44 +73,34 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                         <span class="stat-badge live">Live</span>
                     </div>
-                    <div class="stat-value" id="packetsCount">45,231</div>
+                    <div class="stat-value" id="packetsCount">0</div>
                     <div class="stat-label">Packets Captured</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        </svg>
-                        <span class="stat-badge alert" id="alertBadge">+12</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                        <span class="stat-badge alert" id="alertBadge">+0</span>
                     </div>
-                    <div class="stat-value" id="alertsCount">12</div>
+                    <div class="stat-value" id="alertsCount">0</div>
                     <div class="stat-label">Active Alerts</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                         <span class="stat-badge risk">Risk</span>
                     </div>
-                    <div class="stat-value" id="urlsCount">8</div>
+                    <div class="stat-value" id="urlsCount">0</div>
                     <div class="stat-label">Suspicious URLs</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                        </svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                         <span class="stat-badge found">Found</span>
                     </div>
-                    <div class="stat-value" id="vulnCount">3</div>
+                    <div class="stat-value" id="vulnCount">0</div>
                     <div class="stat-label">Vulnerable Sites</div>
                 </div>
             </div>
@@ -119,74 +109,76 @@
                 <!-- Network Traffic Chart -->
                 <div class="card chart-card">
                     <h2>Network Traffic (Packets/sec)</h2>
-                    <canvas id="networkChart"></canvas>
+                    <!-- Added relative wrapper to force chart visibility -->
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="networkChart"></canvas>
+                    </div>
                 </div>
 
-                <!-- Threat Breakdown -->
+                <!-- Threat Breakdown Chart -->
                 <div class="card">
                     <h2>Threat Breakdown</h2>
-                    <canvas id="threatChart"></canvas>
+                    <!-- Added relative wrapper to force chart visibility -->
+                    <div style="position: relative; height: 250px; width: 100%;">
+                        <canvas id="threatChart"></canvas>
+                    </div>
                     <div class="legend" id="threatLegend"></div>
                 </div>
             </div>
 
             <div class="dashboard-grid-2">
                 <!-- Recent Alerts -->
-                <div class="card alerts-card">
-                    <h2>Recent Alerts</h2>
-                    <div id="alertsList" class="alerts-list"></div>
+                <div class="card alerts-card" style="position: relative;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 style="margin: 0;">Real-Time Threat Alerts</h2>
+                        <div class="live-indicator">
+                            <div class="pulse-dot"></div> Live Stream
+                        </div>
+                    </div>
+                    <div id="alertsList" class="alerts-list">
+                        <div class="no-alerts">Waiting for incoming traffic...</div>
+                    </div>
                 </div>
 
-                <!-- System Health & Timeline -->
-                <div>
+                <!-- Right Column: Schedules & Health -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- Scheduled Scans -->
+                    <div class="card">
+                        <h2>📅 Active Scheduled Scans</h2>
+                        <div id="dashboardSchedulesList" class="alerts-list">
+                            <div class="no-alerts">No scheduled scans active.</div>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
                     <div class="card system-health">
                         <h2>System Health</h2>
                         <div class="health-items">
                             <div class="health-item">
+                                <span>WebSocket Stream</span>
+                                <div class="health-status" id="wsHealthStatus">
+                                    <span style="color: #eab308;">Connecting...</span>
+                                </div>
+                            </div>
+                            <div class="health-item">
                                 <span>Packet Sniffer</span>
-                                <div class="health-status">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                    </svg>
-                                    <span>Running</span>
+                                <div class="health-status" id="snifferHealthStatus">
+                                    <span style="color: #6b7280;">Idle</span>
                                 </div>
                             </div>
                             <div class="health-item">
-                                <span>ML Model</span>
+                                <span>ML Engine</span>
                                 <div class="health-status">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                    </svg>
-                                    <span>Loaded</span>
-                                </div>
-                            </div>
-                            <div class="health-item">
-                                <span>API Status</span>
-                                <div class="health-status">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                    </svg>
-                                    <span>Online</span>
-                                </div>
-                            </div>
-                            <div class="health-item">
-                                <span>Database</span>
-                                <div class="health-status">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                    </svg>
-                                    <span>Connected</span>
+                                    <span style="color: #10b981;">● Online</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Activity Timeline -->
                     <div class="card activity-timeline">
-                        <h2>Activity Timeline</h2>
+                        <h2>Network Activity</h2>
                         <div class="timeline" id="timeline"></div>
                     </div>
                 </div>

@@ -1,33 +1,43 @@
 /* 🚀 NETWORK PAGE LAYOUT FIX - Add to TOP of network.css */
-.page-content {
+
+/* Target ONLY the network page to remove padding */
+.network-page.page-content {
     margin-left: 260px !important;
-    min-height: 100vh;
-    background: #0a0a0a;
-    padding: 20px;
+    height: 100vh !important;
+    background: var(--background);
+    padding: 0 !important; /* Removes the blank box padding */
+    display: flex;
+    flex-direction: column;
 }
 
-#sidebar.collapsed ~ .page-content {
+#sidebar.collapsed ~ .network-page.page-content {
     margin-left: 72px !important;
 }
 
-/* Prevent double offset when .main-content is nested inside .page-content */
+/* FIX: Ensure the inner container puts List and Details side-by-side */
 .network-page .main-content {
     margin-left: 0 !important;
     padding: 0 !important;
+    flex: 1;
+    display: flex;
+    flex-direction: row !important; /* Forces them side-by-side */
+    min-height: 0;
 }
 
-/* Preserve your existing network layout */
+/* Maintain responsiveness on smaller screens */
+@media (max-width: 1024px) {
+    .network-page .main-content {
+        flex-direction: column !important; /* Stack only on mobile/tablets */
+    }
+}
+
+/* Ensure tables stretch edge-to-edge seamlessly */
 .network-container,
 .packet-table-container,
 .controls-container {
     max-width: 100%;
-    margin: 0 auto;
-}
-
-/* Fix table responsiveness */
-.packet-table-wrapper {
-    overflow-x: auto;
-    margin-top: 20px;
+    margin: 0;
+    padding: 0;
 }
 
 * {

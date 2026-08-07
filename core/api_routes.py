@@ -338,11 +338,12 @@ def get_dashboard_alerts():
             for row in cursor.fetchall():
                 import json
                 res = json.loads(row['results']) if row['results'] else {}
-                if res.get('overall_severity') in ['High', 'Critical']:
+                severity_val = res.get('overall_severity') or 'Info'
+                if severity_val in ['High', 'Critical']:
                     alerts.append({
                         'module': row['type'],
                         'message': f"Vulnerability on {row['target_url']}",
-                        'severity': res.get('overall_severity').lower(),
+                        'severity': severity_val.lower(),
                         'time': row['ts']
                     })
 
@@ -406,21 +407,70 @@ def api_web_scanner():
 
 @api_bp.route('/api/vuln/schedule', methods=['POST'])
 def add_vuln_schedule():
-    from apscheduler.schedulers.background import BackgroundScheduler
+    from core.scheduler import scheduler, scheduled_target_scan
     import time
 
     schedule_data = request.json or {}
 
+    if not scheduler:
+        return jsonify({'error': 'APScheduler is not installed'}), 500
+
     try:
         scan_time = schedule_data.get('time', '09:00')
+        target_url = schedule_data.get('url')
+        
+        if not target_url:
+            return jsonify({'error': 'Target URL is required for scheduling'}), 400
+
         hours, minutes = scan_time.split(':')
         job_id = f"vuln_scan_{schedule_data.get('id', int(time.time()))}"
 
-        # For now, we'll need to handle scheduler differently since it's in app.py
-        # This is a placeholder - the scheduler should be moved to a shared location
-        return jsonify({'error': 'Scheduler not available in Blueprint'}), 500
+        scheduler.add_job(
+            scheduled_target_scan,
+            'cron',
+            hour=int(hours),
+            minute=int(minutes),
+            args=[target_url],  # Pass the specific URL to the scheduler
+            id=job_id,
+            replace_existing=True
+        )
+        return jsonify({'status': 'scheduled', 'job_id': job_id}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@api_bp.route('/api/vuln/schedule/<job_id>', methods=['DELETE'])
+def delete_vuln_schedule(job_id):
+    from core.scheduler import remove_scheduled_scan
+    
+    success = remove_scheduled_scan(job_id)
+    if success:
+        return jsonify({'status': 'deleted', 'job_id': job_id}), 200
+    else:
+        # We return 200 even if it wasn't found to ensure the UI gracefully clears it
+        return jsonify({'status': 'not_found_or_already_deleted'}), 200
+
+
+@api_bp.route('/api/dashboard/schedules', methods=['GET'])
+def get_active_schedules():
+    """Fetch all actively running scheduled background jobs."""
+    try:
+        from core.scheduler import scheduler
+        if not scheduler:
+            return jsonify([])
+            
+        jobs = []
+        for job in scheduler.get_jobs():
+            target = job.args[0] if job.args else "Auto-Phishing Background Scan"
+            jobs.append({
+                'id': job.id,
+                'target': target,
+                'next_run': job.next_run_time.isoformat() if job.next_run_time else "Pending"
+            })
+        return jsonify(jobs), 200
+    except Exception as e:
+        print(f"Error fetching schedules: {e}")
+        return jsonify([]), 200
 
 
 def register_api_endpoints(app):

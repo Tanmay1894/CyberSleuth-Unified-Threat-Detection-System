@@ -1,35 +1,5 @@
 // Common JavaScript for all pages
 
-// Initialize sidebar toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    initializeSidebar();
-});
-
-function initializeSidebar() {
-    if (document.querySelector('script[src*="sidebar-manager.js"]')) {
-        return;
-    }
-
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-
-    if (!toggleBtn || !sidebar) {
-        return;
-    }
-
-    // Check localStorage for saved state
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState === 'true') {
-        sidebar.classList.add('collapsed');
-    }
-
-    toggleBtn.addEventListener('click', function() {
-        sidebar.classList.toggle('collapsed');
-        const isCollapsed = sidebar.classList.contains('collapsed');
-        localStorage.setItem('sidebarCollapsed', isCollapsed);
-    });
-}
-
 // Utility function to format timestamps
 function formatTime() {
     const now = new Date();

@@ -1,4 +1,19 @@
+# Python
 __pycache__/
 *.pyc
+
+# SQLite databases
 *.db
+
+# Virtual environment
 .venv/
+
+# IDE files
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Session captures (generated during runtime)
+sessions/*.pcap

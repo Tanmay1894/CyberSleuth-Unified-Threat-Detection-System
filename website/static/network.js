@@ -199,7 +199,11 @@ class NetworkAnalysisApp {
             const data = await response.json();
             this.currentSessionId = data.sessionId;
             this.currentSession = data;
-            localStorage.setItem('lastNetworkSessionId', this.currentSessionId);
+            // FIX Bug 3: Backend returns { sessionId, name } but stopCapture/startCapture
+            // read this.currentSession?.id — always undefined, silently falls back to
+            // this.currentSessionId which works, but normalize here to be explicit and safe.
+            this.currentSession.id = data.sessionId ?? data.id;
+            this.currentSessionId = this.currentSession.id;
             this.exportBtn.disabled = false;
             this.showToast('Session Created', 'New session created successfully', 'success');
         } catch (error) {
@@ -214,7 +218,7 @@ class NetworkAnalysisApp {
             return;
         }
 
-        const sessionId = this.currentSession?.id || this.currentSessionId;
+        const sessionId = this.currentSession?.id ?? this.currentSessionId;
         if (!sessionId) return;
         
         try {
@@ -236,27 +240,38 @@ class NetworkAnalysisApp {
     }
 
     async stopCapture() {
-        if (!this.currentSessionId) {
+        // FIX Bug 3: The original guard `if (!this.currentSessionId) return` would
+        // prevent stopping if state was lost (e.g. after a page restore race condition)
+        // even though the backend sniffer is still running. Use the best available ID.
+        const sessionId = this.currentSession?.id ?? this.currentSessionId;
+
+        if (!sessionId) {
             this.showToast('No Active Session', 'Please start a new scan first', 'error');
             return;
         }
 
-        const sessionId = this.currentSession?.id || this.currentSessionId;
-        
         try {
             const response = await fetch(`/api/sessions/${sessionId}/stop`, {
                 method: 'POST'
             });
-            
-            if (!response.ok) throw new Error('Failed to stop capture');
-            
+
+            if (!response.ok) throw new Error(`Stop API returned ${response.status}`);
+
             this.statusIndicator.classList.remove('active');
             this.startBtn.disabled = false;
             this.stopBtn.disabled = true;
             this.stopDurationTimer();
             this.showToast('Capture Stopped', 'Network packet capture has been stopped', 'success');
         } catch (error) {
-            this.showToast('Error', 'Failed to stop packet capture', 'error');
+            console.error('stopCapture error:', error);
+            // FIX: Always reset UI to a consistent stopped state even if the
+            // backend call failed — so the user isn't stuck with both buttons
+            // disabled and no way to start again.
+            this.statusIndicator.classList.remove('active');
+            this.startBtn.disabled = false;
+            this.stopBtn.disabled = true;
+            this.stopDurationTimer();
+            this.showToast('Stop Error', `Sniffer may already be stopped: ${error.message}`, 'error');
         }
     }
 
@@ -331,8 +346,13 @@ class NetworkAnalysisApp {
             this.packets = this.packets.slice(0, 1000);
         }
         
-        this.filterPackets();
-        // REMOVE: this.updateTrafficChart(packet);
+        // Debounce the rendering to prevent browser freeze on packet bursts (especially on Stop)
+        if (this.renderTimeout) {
+            clearTimeout(this.renderTimeout);
+        }
+        this.renderTimeout = setTimeout(() => {
+            this.filterPackets();
+        }, 50);
     }
 
     updateStats(stats) {
@@ -382,7 +402,6 @@ class NetworkAnalysisApp {
         }
         
         this.emptyState.style.display = 'none';
-        
         const fragment = document.createDocumentFragment();
         
         packets.forEach((packet, index) => {
@@ -418,7 +437,7 @@ class NetworkAnalysisApp {
                     ${packet.info || '-'}
                 </div>
                 <div class="packet-col">
-                    <span class="${this.getScoreClass(packet.anomalyScore)}" style="font-size: 0.75rem;">
+                    <span class="${this.getScoreClass(packet.anomalyScore)}" style="font-size: 0.75rem; font-weight: bold;">
                         ${packet.anomalyScore.toFixed(2)}
                     </span>
                 </div>

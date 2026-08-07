@@ -266,6 +266,9 @@ class PhishingDetector {
                 localStorage.setItem('lastPhishingSessionId', result.session_id);
             }
 
+            this.resultsPanel.classList.remove('hidden');
+            document.getElementById('phishingEmptyState').classList.add('hidden');
+
             this.displayLatestResult(result);
             await this.loadHistory();
         } catch (error) {
@@ -311,22 +314,41 @@ class PhishingDetector {
             this.reasonsList.innerHTML = reasons.map(reason => `<div class="reason-item"><span>${reason}</span></div>`).join('');
         }
 
-        const features = [
+        // 1. Start with the core ML/GSB metrics
+        let features = [
             { name: 'GSB Status', value: result.gsb_status || 'UNKNOWN' },
             { name: 'ML Verdict', value: result.ml_verdict || 'Unknown' },
-            { name: 'ML Confidence', value: `${Math.round((Number(result.ml_confidence || 0)) * 100)}%` },
-            { name: 'Final Verdict', value: result.final_verdict || 'UNKNOWN' }
+            { name: 'ML Confidence', value: `${Math.round((Number(result.ml_confidence || 0)) * 100)}%` }
         ];
 
+        // 2. Dynamically append all the genuine domain features extracted by Python
+        if (result.domain_details) {
+            Object.entries(result.domain_details).forEach(([key, val]) => {
+                features.push({ name: key, value: val });
+            });
+        }
+
+        // 3. Render the grid (This remains unchanged from your current code)
         if (this.featuresList) {
-            this.featuresList.innerHTML = features.map(feature => `
+            this.featuresList.innerHTML = features.map(feature => {
+                // Optional: Add some color coding for risky values
+                let valueColor = '#e5e7eb'; // default white
+                let valStr = String(feature.value).toLowerCase();
+                if (valStr.includes('insecure') || valStr.includes('suspicious') || valStr.includes('invalid')) {
+                    valueColor = '#ef4444'; // Red for danger
+                } else if (valStr.includes('secure') || valStr === 'no' || valStr === 'valid') {
+                    valueColor = '#10b981'; // Green for safe
+                }
+
+                return `
                 <div class="feature-item">
                     <div class="feature-header">
                         <span class="feature-name">${feature.name}</span>
                     </div>
-                    <div class="feature-value">${feature.value}</div>
+                    <div class="feature-value" style="color: ${valueColor};">${feature.value}</div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 

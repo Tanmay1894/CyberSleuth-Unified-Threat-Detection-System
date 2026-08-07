@@ -15,7 +15,7 @@ import os
 import shutil
 import time
 import threading
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlunparse, urlencode
 from datetime import datetime, timedelta
 from threading import Lock
 from bs4 import BeautifulSoup
@@ -80,6 +80,12 @@ SUSPICIOUS_KEYWORDS = [
     'suspend', 'locked', 'urgent', 'unusual', 'activity', 'verify',
     'validation', 'authenticate', 'wallet', 'crypto'
 ]
+
+TRUSTED_DOMAINS = {
+    'google.com', 'youtube.com', 'facebook.com', 'github.com',
+    'linkedin.com', 'microsoft.com', 'amazon.com', 'twitter.com',
+    'apple.com', 'wikipedia.org', 'reddit.com', 'instagram.com'
+}
 
 # ==========================================
 # MODEL INITIALIZATION
@@ -194,8 +200,9 @@ def extract_phishing_features(url):
         # Feature 16: Number of query parameters
         query_params = len(parse_qs(query)) if query else 0
 
-        # Feature 17: Suspicious keyword count
-        suspicious_count = sum(1 for keyword in SUSPICIOUS_KEYWORDS if keyword in url.lower())
+        # Feature 17: Suspicious keyword count only in hostname + path
+        url_without_query = parsed.netloc + parsed.path
+        suspicious_count = sum(1 for keyword in SUSPICIOUS_KEYWORDS if keyword in url_without_query.lower())
 
         # Feature 18: Domain age (expensive, use caching)
         domain_age_days = get_domain_age(domain)
@@ -323,7 +330,7 @@ def get_domain_age(domain):
 
         return 0
     except:
-        return 0  # Safe fallback
+        return -1  # Unknown domain age fallback
 
 def check_ssl_certificate(domain):
     """
@@ -465,7 +472,8 @@ def is_suspicious_url(features):
     if features.get('tld') in suspicious_tlds:
         warnings_count += 1
 
-    if features.get('domain_age_days', 0) < 30:
+    domain_age = features.get('domain_age_days', -1)
+    if domain_age != -1 and domain_age < 30:
         warnings_count += 1
 
     return warnings_count >= 2
@@ -479,6 +487,12 @@ def make_final_decision(gsb_result, ml_score, ml_confidence, url_features):
 
     if is_suspicious_url(url_features):
         return "phishing", 95, "suspicious_features"
+
+    if gsb_result == "safe" and url_features.get('ssl_valid') == 1:
+        if ml_risk > 75 and ml_confidence > 0.8:
+            return "warning", min(80, ml_risk), "gsb_safe_ssl_override"
+        if ml_risk > 50:
+            return "warning", ml_risk, "gsb_safe_warning"
 
     if ml_risk > 75 and ml_confidence > 0.8:
         return "phishing", ml_risk, "ml_detection"
@@ -494,6 +508,19 @@ def make_final_decision(gsb_result, ml_score, ml_confidence, url_features):
 # ==========================================
 # ML PHISHING CHECK (REFACTORED)
 # ==========================================
+def sanitize_url_for_ml(url):
+    """Strip common harmless tracking parameters before feature extraction."""
+    parsed = urlparse(url)
+    query_params = parse_qs(parsed.query, keep_blank_values=True)
+    filtered = {
+        k: v
+        for k, v in query_params.items()
+        if k.lower() not in ('utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid')
+    }
+    new_query = urlencode(filtered, doseq=True)
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, new_query, parsed.fragment))
+
+
 def ml_phishing_check(url):
     """Check URL using trained ML model with real feature extraction."""
     try:
@@ -634,10 +661,10 @@ def calculate_risk_score(url, gsb_result, ml_result, features):
         reasons.append(f"Contains {features[17]} suspicious keyword(s)")
 
     # Domain age (10 points)
-    if 0 < features[18] < 30:  # Newly registered (< 30 days)
+    if features[18] != -1 and 0 < features[18] < 30:  # Newly registered (< 30 days)
         risk_score += 10
         reasons.append("Newly registered domain (less than 30 days old)")
-    elif 30 <= features[18] < 180:  # Young domain (< 6 months)
+    elif features[18] != -1 and 30 <= features[18] < 180:  # Young domain (< 6 months)
         risk_score += 5
         reasons.append("Young domain (less than 6 months old)")
 
@@ -709,26 +736,74 @@ def analyze_url(url, source="Manual", session_id=None):
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
 
+    parsed = urlparse(url)
+    domain = (parsed.netloc or '').split(':')[0]
+    base_domain = domain.replace('www.', '').lower()
+
+    if base_domain in TRUSTED_DOMAINS:
+        final_verdict = "SAFE"
+        confidence = 1.0
+        risk_score = 0
+        reasons = [
+            "Domain is a known, trusted entity.",
+            "Detection method: trusted_domain_whitelist"
+        ]
+        scan_record = {
+            'url': url,
+            'gsb_status': 'SAFE',
+            'ml_verdict': 'Safe',
+            'ml_confidence': 1.0,
+            'final_verdict': final_verdict,
+            'risk_score': risk_score,
+            'detection_method': 'trusted_domain_whitelist',
+            'reasons': reasons,
+            'source': source,
+            'timestamp': datetime.now().isoformat()
+        }
+        try:
+            db.save_phishing_scan(session_id, scan_record)
+            notifications.push_phishing(scan_record)
+        except Exception as e:
+            print(f"Error saving phishing scan: {e}")
+
+        return {
+            "url": url,
+            "gsb_status": 'SAFE',
+            "ml_verdict": 'Safe',
+            "ml_confidence": 1.0,
+            "final_verdict": final_verdict,
+            "detection_method": 'trusted_domain_whitelist',
+            "result": 'safe',
+            "confidence": confidence,
+            "risk_score": risk_score,
+            "reasons": reasons,
+            "timestamp": datetime.now().isoformat(),
+            "session_id": session_id
+        }
+
     # GSB Check
     gsb_result = check_gsb(url)
 
-    # ML Check
-    ml_result = ml_phishing_check(url)
+    # ML Check with cleaned URL for model scoring
+    sanitized_url = sanitize_url_for_ml(url)
+    ml_result = ml_phishing_check(sanitized_url)
 
-    features = ml_result.get('features', extract_phishing_features(url))
+    features = ml_result.get('features', extract_phishing_features(sanitized_url))
     parsed = urlparse(url)
     domain = (parsed.netloc or '').split(':')[0]
     domain_without_www = domain.replace('www.', '')
     subdomains = domain_without_www.split('.')[:-2] if len(domain_without_www.split('.')) > 2 else []
     tld = domain_without_www.split('.')[-1].lower() if '.' in domain_without_www else ''
-    domain_age_days = int(features[18]) if len(features) > 18 else 0
+    domain_age_days = int(features[18]) if len(features) > 18 else -1
+    ssl_valid = int(features[19]) if len(features) > 19 else -1
     is_ip = bool(features[15]) if len(features) > 15 else is_ip_address(domain_without_www)
 
     url_feature_context = {
         'is_ip': is_ip,
         'subdomains': subdomains,
         'tld': tld,
-        'domain_age_days': domain_age_days
+        'domain_age_days': domain_age_days,
+        'ssl_valid': ssl_valid
     }
 
     gsb_label = "phishing" if gsb_result.get('status') == 'MALICIOUS' else "safe"
@@ -774,8 +849,32 @@ def analyze_url(url, source="Manual", session_id=None):
         }
         db.save_phishing_scan(session_id, scan_record)
         notifications.push_phishing(scan_record)
+        
+        # 🚀 NEW: AUTO-TRIGGER VULNERABILITY SCANNER
+        # If the URL is highly suspicious or malicious, send it to the Vuln Scanner instantly
+        if final_verdict in ['MALICIOUS', 'SUSPICIOUS'] or int(risk_score) >= 60:
+            try:
+                from core.web_scanner import start_vulnerability_scan
+                print(f"[*] SOAR Trigger: Auto-starting vulnerability scan for {url}")
+                # We use session_id 0 to group these as automated system background tasks
+                start_vulnerability_scan(session_id=0, url=url)
+            except Exception as vuln_error:
+                print(f"[!] Failed to auto-trigger vulnerability scanner: {vuln_error}")
+                
     except Exception as e:
         print(f"Error saving phishing scan: {e}")
+
+    # Translate raw numerical ML features into human-readable domain facts
+    domain_details = {
+        "Base Domain": domain_without_www,
+        "Connection": "HTTPS (Secure)" if len(features) > 8 and features[8] == 1 else "HTTP (Insecure)",
+        "Domain Age": f"{domain_age_days} days" if domain_age_days > 0 else "Unknown / Newly Registered",
+        "Uses IP Address": "Yes (Suspicious)" if is_ip else "No",
+        "SSL Certificate": "Valid" if len(features) > 19 and features[19] == 1 else ("Invalid/Expired" if len(features) > 19 and features[19] == 0 else "Unknown"),
+        "Subdomain Count": str(features[9]) if len(features) > 9 else "0",
+        "Suspicious Keywords": f"{features[17]} found" if len(features) > 17 and features[17] > 0 else "None",
+        "URL Length": f"{features[0]} chars" if len(features) > 0 else "Unknown"
+    }
 
     return {
         "url": url,
@@ -789,7 +888,8 @@ def analyze_url(url, source="Manual", session_id=None):
         "risk_score": int(risk_score),
         "reasons": reasons,
         "timestamp": datetime.now().isoformat(),
-        "session_id": session_id
+        "session_id": session_id,
+        "domain_details": domain_details
     }
 
 # ==========================================

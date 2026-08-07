@@ -1,4 +1,47 @@
-CyberSleuth* {
+/* 🚀 GLOBAL SEAMLESS SCROLLING & SIDEBAR STABILITY */
+
+/* Hide scrollbar globally to prevent layout shifting between pages */
+html, body {
+    -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+    scrollbar-width: none;  /* Hide scrollbar for Firefox */
+    overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+    display: none !important; /* Hide scrollbar for Chrome, Safari, Opera */
+}
+
+/* Ensure Sidebar stays strictly fixed without jitter */
+#sidebar {
+    height: 100vh !important;
+    top: 0 !important;
+    left: 0 !important;
+    position: fixed !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+    z-index: 1000;
+    transform: translateZ(0); /* Forces hardware acceleration to stop flickering */
+}
+
+/* Standardize the offset for all pages */
+.main-content, .page-content {
+    margin-left: 260px;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Prevent double offset if a page nests main-content inside page-content */
+.page-content .main-content {
+    margin-left: 0 !important;
+}
+
+#sidebar.collapsed ~ .main-content,
+#sidebar.collapsed ~ .page-content {
+    margin-left: 72px !important;
+}
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,9 +49,18 @@ CyberSleuth* {
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background-color: #030712;
-    color: #f3f4f6;
-    overflow-y: hidden;
+    background-color: #0a0b14 !important; /* 🚀 Matches network.css perfectly */
+    color: #f8fafc !important;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+    scrollbar-width: none;  /* Hide scrollbar for Firefox */
+}
+
+/* 🚀 Hide scrollbar globally to stop layout jumping */
+::-webkit-scrollbar {
+    display: none !important; 
 }
 
 .main {
@@ -34,17 +86,24 @@ body {
     justify-content: center;
 }
 
-.sidebar {
-    width: 16rem;
-    background-color: #111827;
-    border-right: 1px solid #1f2937;
+/* 🚀 FLAWLESS SIDEBAR */
+#sidebar {
+    width: 260px !important; /* FIXED: Changed from 16rem to perfectly match the 260px margin */
+    background-color: #111827 !important;
+    border-right: 1px solid #1f2937 !important;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s ease;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: 1000;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0); /* Forces hardware acceleration to stop UI jitter */
 }
 
 .sidebar.collapsed {
-    width: 64px;
+    width: 72px !important; /* FIXED: Standardized collapsed width */
 }
 
 .sidebar.collapsed .sidebar-title,
@@ -425,18 +484,6 @@ body {
     margin-left: 72px !important;
 }
 
-/* 🚀 NETWORK PAGE EMERGENCY FIX */
-#network-container,
-.network-main {
-    margin-left: 260px !important;
-    transition: margin-left 0.3s ease;
-}
-
-#sidebar.collapsed ~ #network-container,
-#sidebar.collapsed ~ .network-main {
-    margin-left: 72px !important;
-}
-
 .mobile-overlay {
     position: fixed;
     top: 0;
@@ -461,40 +508,20 @@ body {
     .main-content, .page-content { margin-left: 0 !important; }
 }
 
-/* 🚀 FULL HEIGHT SIDEBAR - Add to common.css */
-html, body {
-    height: 100vh !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow-x: hidden;
-}
-
-#sidebar {
-    height: 100vh !important;
-    top: 0 !important;
-    left: 0 !important;
-    position: fixed !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0 !important;
-    padding: 0 !important;
-    min-height: 100vh;
-}
-
-/* Ensure main content also full height */
+/* 🚀 FLAWLESS PAGE CONTENT MARGINS */
 .main-content, .page-content {
-    min-height: 100vh !important;
-    margin-left: 260px;
-    padding: 20px;
+    margin-left: 260px !important; /* Matches expanded sidebar perfectly */
+    min-height: 100vh;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
 }
 
-/* Fix collapsed state */
+/* Prevent double offset if a page nests main-content inside page-content */
+.page-content .main-content {
+    margin-left: 0 !important;
+}
+
 #sidebar.collapsed ~ .main-content,
 #sidebar.collapsed ~ .page-content {
-    margin-left: 72px !important;
+    margin-left: 72px !important; /* Matches collapsed sidebar perfectly */
 }

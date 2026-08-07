@@ -9,6 +9,9 @@ from datetime import datetime
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
 
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 from bs4 import BeautifulSoup
 
 from core import notifications
@@ -26,16 +29,9 @@ SAFE_HEADERS = {
 }
 
 COMMON_ENDPOINTS = [
-    'admin',
-    'login',
-    'dashboard',
-    'backup',
-    '.git',
-    '.env',
-    'api',
-    'test',
-    'staging',
-    'phpinfo.php',
+    'admin', 'login', 'dashboard', 'backup', '.git/config', '.env', 
+    'api', 'test', 'staging', 'phpinfo.php', 'wp-config.php.bak', 
+    'server-status', 'swagger.json', 'docker-compose.yml'
 ]
 
 SQL_ERROR_PATTERNS = [
@@ -49,7 +45,9 @@ SQL_ERROR_PATTERNS = [
 ]
 
 SQLI_PROBE_VALUE = "' OR '1'='1"
-XSS_PROBE_MARKER = "CYBERSLEUTH_XSS_PROBE"
+TIME_PROBE = "'; WAITFOR DELAY '0:0:5'--"
+# The structural characters allow us to test if the server properly escapes output
+XSS_PROBE_MARKER = 'cybersleuth"><'
 
 def scan_website(url):
     """Comprehensive web vulnerability scanner."""
@@ -64,7 +62,7 @@ def scan_website(url):
     findings = []
     
     # 1. Port Scan
-    port_findings = scan_porta(hostname, [80, 443, 22, 21, 25, 3306, 5432])
+    port_findings = scan_ports(hostname, [80, 443, 22, 21, 25, 3306, 5432])
     findings.extend(port_findings)
     
     # 2. SSL Certificate Analysis
@@ -143,7 +141,7 @@ def start_vulnerability_scan(session_id, url):
     except Exception as e:
         return {'error': str(e)}
 
-def scan_porta(hostname, ports):
+def scan_ports(hostname, ports):
     """Scan common ports for service availability."""
     findings = []
     for port in ports:
@@ -265,7 +263,8 @@ def detect_services(hostname):
 
 
 def _safe_get(session, target_url):
-    return session.get(target_url, timeout=DEFAULT_TIMEOUT, headers=SAFE_HEADERS, allow_redirects=True)
+    # Added verify=False so self-signed certificates don't crash the scanner
+    return session.get(target_url, timeout=DEFAULT_TIMEOUT, headers=SAFE_HEADERS, allow_redirects=True, verify=False)
 
 
 def _normalize_base_url(target_url):
@@ -439,6 +438,28 @@ def test_sql_injection(discovered_pages):
                             'description': f'SQL error pattern observed after safe form probe on {action}.',
                             'affected_component': action,
                             'solution': 'Validate and normalize user input server-side and use parameterized SQL queries for all database access.'
+                        })
+                except requests.RequestException:
+                    continue
+
+            # Time-based SQLi probing (blind injection detection)
+            if params:
+                injected_params = {k: TIME_PROBE for k in params.keys()}
+                probe_query = urlencode(injected_params, doseq=True)
+                probe_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path, parsed.params, probe_query, parsed.fragment))
+                try:
+                    import time
+                    start_time = time.time()
+                    response = _safe_get(session, probe_url)
+                    requests_used += 1
+                    elapsed = time.time() - start_time
+                    if elapsed > 4:  # If response took more than 4 seconds, likely time-based injection
+                        findings.append({
+                            'type': 'Potential Time-Based SQL Injection',
+                            'severity': 'High',
+                            'description': f'Time-based SQL injection detected on {page["url"]} (response delayed {elapsed:.1f}s).',
+                            'affected_component': page['url'],
+                            'solution': 'Use parameterized queries and input sanitization to prevent SQL injection attacks.'
                         })
                 except requests.RequestException:
                     continue

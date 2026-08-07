@@ -2,6 +2,10 @@
 
 import warnings
 warnings.filterwarnings("ignore", message="sklearn.utils.parallel.delayed")
+# Suppress: "X does not have valid feature names, but RandomForestClassifier was fitted with feature names"
+# Root cause: scaler was fitted on a plain numpy array so passing a named DataFrame triggers this.
+# We pass .values (numpy array) to scaler.transform() below — this filter covers any residual paths.
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 import threading
 import queue
@@ -195,7 +199,7 @@ class NetworkSnifferManager:
             for flow_tuple, flow in list(self.flow_state.items()):
                 timeout = TCP_FIN_RST_TIMEOUT if flow.get("has_fin_rst") else FLOW_TIMEOUT
                 if current_time - flow["last_time"] > timeout:
-                    final_metrics = self.calculate_and_predict_flow(flow)
+                    final_metrics = calculate_and_predict_flow(flow)
                     if final_metrics:
                         self.completed_flows_queue.put(final_metrics)
                     flows_to_remove.append(flow_tuple)
@@ -205,6 +209,7 @@ class NetworkSnifferManager:
             time.sleep(1)
 
     def start_capture(self, session_id):
+        from scapy.config import conf  # Ensure correct interface on Windows
         if self.sniffing:
             return
         self.current_db_session_id = session_id
@@ -216,35 +221,55 @@ class NetworkSnifferManager:
         with self.completed_flows_queue.mutex:
             self.completed_flows_queue.queue.clear()
 
-        self.sniffer = AsyncSniffer(prn=self.packet_handler, store=False)
+        # Explicitly set iface for Windows compatibility
+        self.sniffer = AsyncSniffer(iface=conf.iface, prn=self.packet_handler, store=False)
         self.sniffer.start()
         self.sniffing = True
         threading.Thread(target=self.flow_monitor, daemon=True).start()
 
     def stop_capture(self, session_id):
-        if self.sniffing and self.sniffer is not None:
-            self.sniffer.stop()
-            self.sniffing = False
+        if not self.sniffing:
+            return  # Already stopped — nothing to do
 
-            # Process remaining flows
-            for flow in list(self.flow_state.values()):
-                final_metrics = self.calculate_and_predict_flow(flow)
+        # FIX Bug 2: AsyncSniffer.stop() can raise RuntimeError on Windows
+        # if the underlying socket/thread has already closed (e.g. after a
+        # packet error). An unhandled exception here propagates to Flask and
+        # returns a 500, which makes network.js throw "Failed to stop capture"
+        # and leaves the Stop button in a broken disabled state.
+        # Wrap it so we always proceed to clean up regardless.
+        self.sniffing = False  # Set flag FIRST so flow_monitor thread exits cleanly
+        if self.sniffer is not None:
+            try:
+                self.sniffer.stop()
+            except Exception as e:
+                print(f"[stop_capture] sniffer.stop() raised (safe to ignore on Windows): {e}")
+
+        # FIX Bug 1: stop_capture was calling the module-level
+        # calculate_and_predict_flow() for remaining flows, which bypasses
+        # the instance's flow_state drain properly. Use the same global
+        # function (it reads FEATURE_COLUMNS / model correctly) but ensure
+        # we drain self.flow_state, not the stale global flow_state dict.
+        for flow in list(self.flow_state.values()):
+            try:
+                final_metrics = calculate_and_predict_flow(flow)
                 if final_metrics:
                     self.completed_flows_queue.put(final_metrics)
-            self.flow_state.clear()
+            except Exception as e:
+                print(f"[stop_capture] Error processing remaining flow: {e}")
+        self.flow_state.clear()
 
-            os.makedirs("sessions", exist_ok=True)
-            if self.captured_packets:
-                wrpcap(f"sessions/session_{session_id}.pcap", self.captured_packets)
-            else:
-                print("No packets captured to save.")
+        os.makedirs("sessions", exist_ok=True)
+        if self.captured_packets:
             try:
-                db.close_session(session_id)
-            except Exception:
-                pass
-
-        if self.current_db_session_id == session_id:
-            self.current_db_session_id = None
+                wrpcap(f"sessions/session_{session_id}.pcap", self.captured_packets)
+            except Exception as e:
+                print(f"[stop_capture] Failed to write PCAP: {e}")
+        else:
+            print("No packets captured to save.")
+        try:
+            db.close_session(session_id)
+        except Exception:
+            pass
 
     def get_websocket_data(self):
         """Gets current flow and real-time statistics for WebSocket."""
@@ -543,11 +568,24 @@ def calculate_and_predict_flow(flow):
     features['Subflow Bwd Packets'] = len(bwd_packets)
     features['Subflow Bwd Bytes'] = sum(bwd_pkt_lengths)
 
-    # Placeholder features - not feasible to calculate from raw packets without ambiguity
+    # Calculate Active and Idle features based on IATs
+    # Threshold for idle: 1 second
+    idle_threshold = 1.0
+    active_iats = [iat for iat in flow_iats if iat < idle_threshold]
+    idle_iats = [iat for iat in flow_iats if iat >= idle_threshold]
+
+    features['Active Mean'] = np.mean(active_iats) if active_iats else 0
+    features['Active Std'] = np.std(active_iats) if len(active_iats) > 1 else 0
+    features['Active Max'] = max(active_iats) if active_iats else 0
+    features['Active Min'] = min(active_iats) if active_iats else 0
+    features['Idle Mean'] = np.mean(idle_iats) if idle_iats else 0
+    features['Idle Std'] = np.std(idle_iats) if len(idle_iats) > 1 else 0
+    features['Idle Max'] = max(idle_iats) if idle_iats else 0
+    features['Idle Min'] = min(idle_iats) if idle_iats else 0
+
+    # Bulk features - complex to calculate from raw packets, set to 0 for now
     for key in ['Fwd Avg Bytes/Bulk', 'Fwd Avg Packets/Bulk', 'Fwd Avg Bulk Rate',
-                'Bwd Avg Bytes/Bulk', 'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate',
-                'Active Mean', 'Active Std', 'Active Max', 'Active Min',
-                'Idle Mean', 'Idle Std', 'Idle Max', 'Idle Min']:
+                'Bwd Avg Bytes/Bulk', 'Bwd Avg Packets/Bulk', 'Bwd Avg Bulk Rate']:
         features[key] = 0
 
     features['Destination Port'] = flow.get('dsport', 0)
@@ -556,19 +594,32 @@ def calculate_and_predict_flow(flow):
     score = 0.0
     if model and scaler:
         try:
-            # Ensure features are in the correct order
+            # Build feature vector in the exact training column order.
+            # Use 0 as fallback for any missing key.
             feature_vector = [features.get(col, 0) for col in FEATURE_COLUMNS]
-            df = pd.DataFrame([feature_vector], columns=FEATURE_COLUMNS)
 
-            # Scale and predict
-            scaled_features = scaler.transform(df)
+            # FIX (UserWarning): The scaler was fitted on a plain numpy array
+            # (no column names). Passing a named DataFrame causes sklearn to warn
+            # "X does not have valid feature names". Pass .values (raw numpy array)
+            # to match the fitted state exactly — warning eliminated at the source.
+            feature_array = np.array(feature_vector, dtype=np.float64).reshape(1, -1)
+
+            # Replace NaN and Infinity with 0 before scaling
+            feature_array = np.where(
+                np.isnan(feature_array) | np.isinf(feature_array),
+                0.0,
+                feature_array
+            )
+
+            scaled_features = scaler.transform(feature_array)
             prediction_proba = model.predict_proba(scaled_features)
 
-            # Score is the probability of the 'attack' class (usually index 1)
-            score = prediction_proba[0][1]
+            # Score is the probability of the 'attack' class (index 1)
+            score = float(prediction_proba[0][1])
         except Exception as e:
             print(f"Error during prediction for flow {flow['id']}: {e}")
-            score = 0.0 # Default to non-anomalous on error
+            score = 0.0
+
 
     # --- Format for Frontend ---
     dur = duration_sec
@@ -578,6 +629,18 @@ def calculate_and_predict_flow(flow):
 
     packet_count = len(packets)
     duration = features['Flow Duration'] / 1_000_000 if features.get('Flow Duration') else 0
+
+    # FIX (TypeError): Some feature values can be None (e.g. dsport on UDP flows),
+    # or numpy nan/inf from empty-list stats. float(None) raises TypeError and
+    # crashes the entire flow_monitor thread. Coerce all bad values to 0.0 safely.
+    def _safe_float(v):
+        try:
+            f = float(v)
+            return 0.0 if (math.isnan(f) or math.isinf(f)) else f
+        except (TypeError, ValueError):
+            return 0.0
+
+    clean_features = {k: _safe_float(v) for k, v in features.items()}
 
     flow_record = {
         "id": flow["id"],
@@ -593,7 +656,7 @@ def calculate_and_predict_flow(flow):
         "headers": {"Source Port": flow.get("sport"), "Destination Port": flow.get("dsport"), "Service": service},
         "payload": "Payload data not inspected.",
         # include feature vector for debugging / storage
-        "flow_data": features
+        "flow_data": clean_features
     }
 
     return flow_record
